@@ -1,6 +1,6 @@
 
 
-import apiClient from "../path/to/apiClient"; // adjust path
+import apiClient from "../services/apiClient"; // adjust path
 
 export const getSuggestions = async () => {
   const res = await apiClient.get("/suggestions");
