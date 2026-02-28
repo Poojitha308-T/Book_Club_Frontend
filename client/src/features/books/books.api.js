@@ -1,7 +1,7 @@
 import apiClient from "@/services/apiClient";
 
-export const getAllBooks = async () => {
-  const res = await apiClient.get("/books");
+export const getAllBooks = async (page = 1) => {
+  const res = await apiClient.get(`/books?page=${page}`);
   return res.data;
 };
 

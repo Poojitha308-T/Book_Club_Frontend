@@ -1,108 +1,80 @@
-import { useState } from "react";
-import { createBook } from "../books.api";
+import React, { useState } from "react";
+import { createBook } from "../../services/books.service";
 import { toast } from "react-toastify";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { useAuth } from "@/context/AuthContext";
 
-const BookFormModal = ({ onBookCreated }) => {
-  const { user } = useAuth(); // safe because BooksPage already ensures user exists
-  const [open, setOpen] = useState(false);
+const BookFormModal = ({ isOpen, onClose, onSuccess }) => {
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    description: "",
-    coverUrl: "",
-  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.author) {
-      toast.error("Title and Author are required");
-      return;
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     try {
-      const payload = { ...formData, addedBy: user?.email };
-      const newBook = await createBook(payload);
+      await createBook({ title, author, description });
       toast.success("Book added successfully!");
-      onBookCreated(newBook); // refresh BooksPage
-      setFormData({ title: "", author: "", description: "", coverUrl: "" });
-      setOpen(false);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to add book");
+      setTitle("");
+      setAuthor("");
+      setDescription("");
+      onSuccess();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to add book");
     } finally {
       setLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default">Add New Book</Button>
-      </DialogTrigger>
-
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add New Book</DialogTitle>
-          <DialogDescription>
-            Fill in the book details below and save to add it to the library.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 py-4">
-          <Input
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
+      <div className="bg-white p-6 rounded w-96">
+        <h2 className="text-xl font-bold mb-4">Add New Book</h2>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
             placeholder="Title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
+            value={title}
+            required
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border p-2 rounded"
           />
-          <Input
+          <input
+            type="text"
             placeholder="Author"
-            name="author"
-            value={formData.author}
-            onChange={handleChange}
+            value={author}
+            required
+            onChange={(e) => setAuthor(e.target.value)}
+            className="w-full border p-2 rounded"
           />
-          <Textarea
+          <textarea
             placeholder="Description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
+            value={description}
+            required
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full border p-2 rounded"
           />
-          <Input
-            placeholder="Cover Image URL"
-            name="coverUrl"
-            value={formData.coverUrl}
-            onChange={handleChange}
-          />
-        </div>
-
-        <DialogFooter className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="default" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : "Save"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div className="flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              {loading ? "Saving..." : "Add Book"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

@@ -8,6 +8,7 @@ import SignupPage from "@/features/auth/pages/SignupPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import BookPage from "@/features/books/pages/BooksPage";
 import BookDetailsPage from "@/features/books/pages/BookDetailsPage";
+import BookSuggestionsPage from "@/features/suggestions/BookSuggestionsPage"; // <-- new
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
     element: <BookDetailsPage />,
   },
   {
+    // Protected routes wrapped by AppLayout
     element: (
       <ProtectedRoute>
         <AppLayout />
@@ -40,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <DashboardPage />,
+      },
+      {
+        path: "/book-suggestions",          // <-- new route for suggestions
+        element: <BookSuggestionsPage />,
       },
     ],
   },
