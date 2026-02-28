@@ -1,98 +1,166 @@
-// src/features/dashboard/pages/DashboardPage.jsx
 import { useEffect, useState } from "react";
+import { getDashboardStats } from "../dashboard.api";
+import { getThreads } from "@/features/discussions/discussions.api";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "react-toastify";
-import apiClient from "@/services/apiClient";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalBooks: 0,
-    progress: 0,
-    goals: 0,
-  });
+  const [stats, setStats] = useState(null);
+  const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
+    const fetchAll = async () => {
       try {
-        // Fetch all stats in parallel
-        const [dashboardRes, progressRes, goalsRes] = await Promise.all([
-          apiClient.get("/dashboard"),
-          apiClient.get("/progress"),
-          apiClient.get("/goals"),
-        ]);
+        const dashboardRes = await getDashboardStats();
+        const threadsRes = await getThreads();
 
-        setStats({
-          totalUsers: dashboardRes.data?.data?.totalUsers || 0,
-          totalBooks: dashboardRes.data?.data?.totalBooks || 0,
-          progress: progressRes.data?.data || 0,
-          goals: goalsRes.data?.data || 0,
-        });
+        setStats(dashboardRes?.data || {});
+        setThreads(threadsRes?.threads || []);
       } catch (error) {
-        console.error("Dashboard error:", error);
-        toast.error("Failed to load dashboard data");
+        console.error(error);
+        toast.error("Failed to load dashboard");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchAll();
   }, []);
 
-  const cards = [
-    { title: "Total Users", value: stats.totalUsers, color: "bg-indigo-600" },
-    { title: "Total Books", value: stats.totalBooks, color: "bg-green-500" },
-    { title: "Reading Progress", value: stats.progress, color: "bg-yellow-500" },
-    { title: "Active Goals", value: stats.goals, color: "bg-purple-500" },
-  ];
+  if (loading)
+    return <p className="p-6 text-gray-500">Loading dashboard...</p>;
+
+  const recentThreads = [...threads]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
+
+  const mostActiveThread =
+    threads.length > 0
+      ? threads.reduce((prev, current) =>
+          Number(prev.comment_count) > Number(current.comment_count)
+            ? prev
+            : current
+        )
+      : null;
+
+  const chartData = threads.map((t) => ({
+    name: t.title.length > 10 ? t.title.slice(0, 10) + "..." : t.title,
+    comments: Number(t.comment_count),
+  }));
 
   return (
-    <div className="max-w-7xl mx-auto p-6 md:p-10 space-y-8">
+    <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
+
+      {/* ===== STATS CARDS ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatCard title="Users" value={stats.totalUsers} />
+        <StatCard title="Books" value={stats.totalBooks} />
+        <StatCard title="Reviews" value={stats.totalReviews} />
+        <StatCard title="Discussions" value={stats.totalDiscussions} />
+      </div>
+
+      {/* ===== MOST ACTIVE THREAD ===== */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
-        <p className="text-gray-500 mt-1">Platform analytics summary</p>
+        <h2 className="text-xl font-semibold mb-4">
+          Most Active Discussion
+        </h2>
+
+        <Card>
+          <CardContent className="p-6">
+            {mostActiveThread ? (
+              <>
+                <h3 className="text-lg font-bold">
+                  {mostActiveThread.title}
+                </h3>
+                <p className="text-gray-500 mt-2">
+                  {mostActiveThread.comment_count} comments
+                </p>
+              </>
+            ) : (
+              <p className="text-gray-400">
+                No discussions available
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {loading
-          ? Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="h-32 bg-gray-200 animate-pulse rounded-2xl"
-                />
-              ))
-          : cards.map((card, i) => (
-              <div
-                key={i}
-                className={`bg-white rounded-2xl shadow-md border p-6 flex flex-col justify-between hover:shadow-lg transition`}
-              >
-                <p className="text-gray-500 text-sm">{card.title}</p>
-                <h3 className="text-4xl font-bold mt-4 text-gray-800">{card.value}</h3>
-              </div>
-            ))}
+      {/* ===== RECENT DISCUSSIONS ===== */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">
+          Recent Discussions
+        </h2>
+
+        <div className="space-y-4">
+          {recentThreads.length === 0 ? (
+            <p className="text-gray-400">
+              No recent discussions
+            </p>
+          ) : (
+            recentThreads.map((thread) => (
+              <Card key={thread.id}>
+                <CardContent className="p-4">
+                  <p className="font-semibold">
+                    {thread.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {thread.comment_count} comments
+                  </p>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-2xl shadow-md border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
-        {loading ? (
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-            <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse" />
-          </div>
-        ) : (
-          <p className="text-gray-500 text-sm">
-            Activity data will appear here.
-          </p>
-        )}
+      {/* ===== ANALYTICS CHART ===== */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">
+          Discussion Activity
+        </h2>
+
+        <Card>
+          <CardContent className="p-6 h-80">
+            {chartData.length === 0 ? (
+              <p className="text-gray-400">
+                No data to display
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="comments" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value }) => (
+  <Card className="shadow-sm hover:shadow-md transition">
+    <CardContent className="p-6">
+      <p className="text-gray-500">{title}</p>
+      <h2 className="text-2xl font-bold">
+        {value || 0}
+      </h2>
+    </CardContent>
+  </Card>
+);
 
 export default DashboardPage;
