@@ -70,7 +70,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
           {/* Users */}
           <NavLink
-            to="/users"
+            to="/admin/users"
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) =>
               `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`

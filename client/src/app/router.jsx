@@ -8,7 +8,8 @@ import SignupPage from "@/features/auth/pages/SignupPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import BookPage from "@/features/books/pages/BooksPage";
 import BookDetailsPage from "@/features/books/pages/BookDetailsPage";
-import BookSuggestionsPage from "@/features/suggestions/BookSuggestionsPage"; // <-- new
+import BookSuggestionsPage from "@/features/suggestions/BookSuggestionsPage";
+import UsersPage from "@/features/users/UsersPage"; // <-- add UsersPage
 
 export const router = createBrowserRouter([
   {
@@ -44,9 +45,14 @@ export const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
-        path: "/book-suggestions",          // <-- new route for suggestions
+        path: "/book-suggestions",
         element: <BookSuggestionsPage />,
       },
+      {
+        path: "/admin/users",   // <-- add UsersPage here
+        element: <UsersPage />,
+      },
+      // Add more admin pages here if needed
     ],
   },
 ]);
