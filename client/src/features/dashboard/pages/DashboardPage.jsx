@@ -63,7 +63,7 @@ const DashboardPage = () => {
     fetchData();
   }, []);
 
-  // 🔹 Merge user library with book titles and avg ratings
+  // 🔹 Merge library with book titles and avg ratings
   const fetchLibraryWithTitlesAndRatings = async (allBooks) => {
     try {
       const libraryRes = await getUserLibrary();
@@ -71,12 +71,19 @@ const DashboardPage = () => {
 
       const libWithTitles = await Promise.all(
         libBooks.map(async (b) => {
-          const bookInfo = allBooks.find((book) => book.id === b.book_id);
-          const revRes = await getBookReviews(b.book_id);
-          const bookReviews = revRes.reviews ?? [];
-          const avgRating = bookReviews.length
-            ? bookReviews.reduce((sum, r) => sum + r.rating, 0) / bookReviews.length
-            : null;
+          const bookInfo = allBooks.find(book => book.id === b.book_id);
+
+          // ⚡ Fetch reviews individually, errors won't break library
+          let avgRating = null;
+          try {
+            const revRes = await getBookReviews(b.book_id);
+            const bookReviews = revRes.reviews ?? [];
+            avgRating = bookReviews.length
+              ? bookReviews.reduce((sum, r) => sum + r.rating, 0) / bookReviews.length
+              : null;
+          } catch (err) {
+            console.warn(`No reviews for book ${b.book_id}`);
+          }
 
           return {
             ...b,
@@ -88,15 +95,15 @@ const DashboardPage = () => {
 
       setLibrary(libWithTitles);
 
-      // ✅ Library stats
       setLibraryStats({
         total: libWithTitles.length,
-        reading: libWithTitles.filter((b) => b.status === "reading").length,
-        completed: libWithTitles.filter((b) => b.status === "completed").length,
-        to_read: libWithTitles.filter((b) => b.status === "to_read").length,
+        reading: libWithTitles.filter(b => b.status === "reading").length,
+        completed: libWithTitles.filter(b => b.status === "completed").length,
+        to_read: libWithTitles.filter(b => b.status === "to_read").length,
       });
     } catch (err) {
       console.error("Failed to fetch library with titles:", err);
+      setLibraryStats({ total: 0, reading: 0, completed: 0, to_read: 0 });
     }
   };
 
@@ -119,11 +126,11 @@ const DashboardPage = () => {
     }
   };
 
-  // 🔹 Fetch reviews for a selected book
+  // 🔹 Fetch reviews for selected book
   const fetchReviewsForBook = async (bookId) => {
     if (!bookId) return setReviews([]);
     try {
-      const res = await getBookReviews(bookId); // GET /reviews/:bookId
+      const res = await getBookReviews(bookId);
       setReviews(res.reviews ?? []);
     } catch (err) {
       console.error("Failed to fetch reviews:", err);
@@ -135,13 +142,13 @@ const DashboardPage = () => {
   const handleAddReview = async () => {
     if (!selectedBook || !reviewText.trim()) return toast.error("Select a book and write a review");
     try {
-      const res = await addBookReview(selectedBook, reviewRating, reviewText); // POST /reviews/:bookId { rating, comment }
+      const res = await addBookReview(selectedBook, reviewRating, reviewText);
       if (res.success) {
         toast.success("Review added");
         setReviewText("");
         setReviewRating(5);
-        await fetchLibraryWithTitlesAndRatings(books); // update library stats
-        fetchReviewsForBook(selectedBook); // refresh reviews
+        await fetchLibraryWithTitlesAndRatings(books);
+        fetchReviewsForBook(selectedBook);
       } else {
         toast.error(res.message || "Failed to add review");
       }
@@ -229,13 +236,11 @@ const DashboardPage = () => {
               }}
             >
               <option value="">Select Book</option>
-              {library
-                .filter((b) => b.title)
-                .map((b) => (
-                  <option key={b.book_id} value={b.book_id}>
-                    {b.title} {b.avgRating != null ? ` - ${b.avgRating.toFixed(1)} ⭐` : ""}
-                  </option>
-                ))}
+              {library.map((b) => (
+                <option key={b.book_id} value={b.book_id}>
+                  {b.title} {b.avgRating != null ? ` - ${b.avgRating.toFixed(1)} ⭐` : ""}
+                </option>
+              ))}
             </select>
 
             <div className="space-y-2">
@@ -278,7 +283,6 @@ const DashboardPage = () => {
             </div>
           </Card>
         </section>
-
       </main>
     </div>
   );
