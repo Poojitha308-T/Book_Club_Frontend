@@ -9,13 +9,9 @@ const BookCard = ({ book }) => {
         className="h-48 w-full object-cover rounded-lg"
       />
 
-      <h2 className="text-lg font-semibold mt-3">
-        {book.title}
-      </h2>
+      <h2 className="text-lg font-semibold mt-3">{book.title}</h2>
 
-      <p className="text-gray-600">
-        {book.author}
-      </p>
+      <p className="text-gray-600">{book.author}</p>
 
       <Link
         to={`/books/${book.id}`}
@@ -23,6 +19,12 @@ const BookCard = ({ book }) => {
       >
         View Details
       </Link>
+      <button
+        onClick={() => handleAddToLibrary(book.id)}
+        className="mt-3 bg-indigo-600 text-white px-3 py-1 rounded"
+      >
+        Add to Library
+      </button>
     </div>
   );
 };

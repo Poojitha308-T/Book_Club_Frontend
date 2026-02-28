@@ -3,6 +3,7 @@ import { getAllBooks, deleteBook, createBook, updateBook } from "../books.api";
 import { toast } from "react-toastify";
 import { Trash2, Pencil, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { addBookToLibrary } from "@/features/library/library.api";
 
 const BooksPage = () => {
   const navigate = useNavigate();
@@ -202,5 +203,14 @@ const Modal = ({ editingBook, formData, setFormData, onClose, onSave }) => (
     </div>
   </div>
 );
+
+const handleAddToLibrary = async (bookId) => {
+  try {
+    await addBookToLibrary(bookId);
+    alert("Added to library!");
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 export default BooksPage;

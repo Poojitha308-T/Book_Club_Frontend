@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats, getThreads } from "../dashboard.api";
+import { getUserLibrary, addBookToLibrary } from "@/features/library/library.api";
+import { getAllBooks } from "@/features/books/books.api";
 import { toast } from "react-toastify";
 import {
   BarChart,
@@ -19,9 +21,21 @@ const DashboardPage = () => {
     totalDiscussions: 0,
   });
 
+  const [libraryStats, setLibraryStats] = useState({
+    total: 0,
+    reading: 0,
+    completed: 0,
+    to_read: 0,
+  });
+
+  const [books, setBooks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("to_read");
+
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 🔥 Fetch all dashboard data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,6 +50,18 @@ const DashboardPage = () => {
         });
 
         setThreads(threadsRes?.threads ?? []);
+
+        // 🔥 Fetch Books for dropdown
+        try {
+          const booksRes = await getAllBooks();
+          setBooks(booksRes?.books ?? []);
+        } catch (err) {
+          console.error("Failed to fetch books", err);
+        }
+
+        // 🔥 Fetch Library Stats
+        await refreshLibraryStats();
+
       } catch (error) {
         toast.error("Failed to load dashboard");
       } finally {
@@ -45,6 +71,48 @@ const DashboardPage = () => {
 
     fetchData();
   }, []);
+
+  // 🔥 Helper: refresh library stats
+  const refreshLibraryStats = async () => {
+    try {
+      const libraryRes = await getUserLibrary();
+      const libraryData = libraryRes?.library ?? [];
+
+      setLibraryStats({
+        total: libraryData.length,
+        reading: libraryData.filter((b) => b.status === "reading").length,
+        completed: libraryData.filter((b) => b.status === "completed").length,
+        to_read: libraryData.filter((b) => b.status === "to_read").length,
+      });
+    } catch (err) {
+      console.error("Library fetch failed:", err);
+    }
+  };
+
+  // 🔥 ADD BOOK HANDLER
+  const handleAddToLibrary = async () => {
+    if (!selectedBook) {
+      toast.error("Please select a book");
+      return;
+    }
+
+    try {
+      const response = await addBookToLibrary(selectedBook, selectedStatus);
+
+      if (response.success) {
+        toast.success("Book added to library");
+        await refreshLibraryStats(); // 🔥 refresh stats instantly
+        setSelectedBook("");
+        setSelectedStatus("to_read");
+      } else {
+        toast.error(response.message || "Failed to add book");
+      }
+
+    } catch (error) {
+      toast.error("Failed to add book");
+      console.error(error);
+    }
+  };
 
   const chartData = threads.map((t) => ({
     name: t.title?.slice(0, 12) || "Thread",
@@ -62,13 +130,12 @@ const DashboardPage = () => {
   return (
     <div className="w-full overflow-x-hidden">
       <main className="px-6 py-10 space-y-10 max-w-7xl mx-auto">
-        
+
         {/* PLATFORM OVERVIEW */}
         <section>
           <h2 className="text-xl font-semibold text-slate-700 mb-6">
             Platform Overview
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             <StatCard title="Total Users" value={stats.totalUsers} />
             <StatCard title="Total Books" value={stats.totalBooks} />
@@ -77,25 +144,64 @@ const DashboardPage = () => {
           </div>
         </section>
 
-        {/* REVIEWS SUMMARY */}
+        {/* ADD BOOK TO LIBRARY */}
         <section>
           <h2 className="text-xl font-semibold text-slate-700 mb-6">
-            Reviews Summary
+            Add Book To Library
           </h2>
 
-          <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
-            <CardContent className="p-6">
-              <p className="text-slate-600 font-medium">
-                Total Reviews Submitted
-              </p>
-              <p className="text-3xl font-bold text-indigo-600 mt-2">
-                {stats.totalReviews}
-              </p>
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="p-6 space-y-4">
+
+              <select
+                className="w-full border p-2 rounded"
+                value={selectedBook}
+                onChange={(e) => setSelectedBook(e.target.value)}
+              >
+                <option value="">Select Book</option>
+                {books.map((book) => (
+                  <option key={book.id} value={book.id}>
+                    {book.title}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="w-full border p-2 rounded"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+              >
+                <option value="to_read">To Read</option>
+                <option value="reading">Reading</option>
+                <option value="completed">Completed</option>
+              </select>
+
+              <button
+                onClick={handleAddToLibrary}
+                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              >
+                Add To Library
+              </button>
+
             </CardContent>
           </Card>
         </section>
 
-        {/* DISCUSSION ACTIVITY CHART */}
+        {/* MY LIBRARY OVERVIEW */}
+        <section>
+          <h2 className="text-xl font-semibold text-slate-700 mb-6">
+            My Library Overview
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            <StatCard title="Total in Library" value={libraryStats.total} />
+            <StatCard title="Reading" value={libraryStats.reading} />
+            <StatCard title="Completed" value={libraryStats.completed} />
+            <StatCard title="Wishlist" value={libraryStats.to_read} />
+          </div>
+        </section>
+
+        {/* DISCUSSION ACTIVITY */}
         <section>
           <h2 className="text-xl font-semibold text-slate-700 mb-6">
             Discussion Activity
@@ -104,20 +210,14 @@ const DashboardPage = () => {
           <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
             <CardContent className="p-6 h-96">
               {threads.length === 0 ? (
-                <p className="text-slate-400 text-center">
-                  No discussions yet
-                </p>
+                <p className="text-slate-400 text-center">No discussions yet</p>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="comments"
-                      fill="#4f46e5"
-                      radius={[6, 6, 0, 0]}
-                    />
+                    <Bar dataKey="comments" fill="#4f46e5" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
