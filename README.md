@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 Deployment Link - https://fluffy-bubblegum-5fd360.netlify.app/
 📚 Book Club Platform — Frontend
 🌟 Overview
+=======
+Deployment link -https://fluffy-bubblegum-5fd360.netlify.app/
+# React + Vite
+>>>>>>> 752119f15d952e76846f6c89da4e417e679a097e
 
 The Book Club Platform is a modern, interactive frontend web application designed to help book lovers collaborate, suggest books, participate in discussions, track reading progress, and engage with a vibrant reading community.
 
