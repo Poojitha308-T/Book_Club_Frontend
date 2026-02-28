@@ -5,7 +5,7 @@ const API = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -15,4 +15,4 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default api;
+export default API;
