@@ -10,17 +10,17 @@ const AppLayout = () => {
   const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-slate-100 via-slate-50 to-indigo-50">
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        onOpenSuggestionModal={() => setSuggestionModalOpen(true)}
-      />
+    <div className="flex min-h-screen bg-slate-50 overflow-x-hidden">
+      
+      {/* Sidebar (desktop static, mobile slide) */}
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Main content */}
+      <div className="flex flex-col flex-1">
+        
         <Navbar setSidebarOpen={setSidebarOpen} />
 
-        <main className="flex-1 p-6 md:p-10 overflow-auto">
+        <main className="flex-1 p-6 md:p-8 bg-slate-100">
           <Outlet />
         </main>
 

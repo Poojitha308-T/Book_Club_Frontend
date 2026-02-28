@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { getDashboardStats } from "../dashboard.api";
-import { getThreads } from "@/features/discussions/discussions.api";
-import { Card, CardContent } from "@/components/ui/card";
+import { getDashboardStats, getThreads } from "../dashboard.api";
 import { toast } from "react-toastify";
 import {
   BarChart,
@@ -11,154 +9,132 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Card, CardContent } from "../../../components/ui/card";
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalBooks: 0,
+    totalReviews: 0,
+    totalDiscussions: 0,
+  });
+
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchData = async () => {
       try {
-        const dashboardRes = await getDashboardStats();
+        const statsRes = await getDashboardStats();
         const threadsRes = await getThreads();
 
-        setStats(dashboardRes?.data || {});
-        setThreads(threadsRes?.threads || []);
+        setStats({
+          totalUsers: statsRes?.data?.totalUsers ?? 0,
+          totalBooks: statsRes?.data?.totalBooks ?? 0,
+          totalReviews: statsRes?.data?.totalReviews ?? 0,
+          totalDiscussions: statsRes?.data?.totalDiscussions ?? 0,
+        });
+
+        setThreads(threadsRes?.threads ?? []);
       } catch (error) {
-        console.error(error);
         toast.error("Failed to load dashboard");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAll();
+    fetchData();
   }, []);
 
-  if (loading)
-    return <p className="p-6 text-gray-500">Loading dashboard...</p>;
-
-  const recentThreads = [...threads]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5);
-
-  const mostActiveThread =
-    threads.length > 0
-      ? threads.reduce((prev, current) =>
-          Number(prev.comment_count) > Number(current.comment_count)
-            ? prev
-            : current
-        )
-      : null;
-
   const chartData = threads.map((t) => ({
-    name: t.title.length > 10 ? t.title.slice(0, 10) + "..." : t.title,
-    comments: Number(t.comment_count),
+    name: t.title?.slice(0, 12) || "Thread",
+    comments: Number(t.comment_count) || 0,
   }));
 
+  if (loading) {
+    return (
+      <div className="p-10 text-center text-slate-500">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="w-full overflow-x-hidden">
+      <main className="px-6 py-10 space-y-10 max-w-7xl mx-auto">
+        
+        {/* PLATFORM OVERVIEW */}
+        <section>
+          <h2 className="text-xl font-semibold text-slate-700 mb-6">
+            Platform Overview
+          </h2>
 
-      {/* ===== STATS CARDS ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard title="Users" value={stats.totalUsers} />
-        <StatCard title="Books" value={stats.totalBooks} />
-        <StatCard title="Reviews" value={stats.totalReviews} />
-        <StatCard title="Discussions" value={stats.totalDiscussions} />
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            <StatCard title="Total Users" value={stats.totalUsers} />
+            <StatCard title="Total Books" value={stats.totalBooks} />
+            <StatCard title="Total Reviews" value={stats.totalReviews} />
+            <StatCard title="Total Discussions" value={stats.totalDiscussions} />
+          </div>
+        </section>
 
-      {/* ===== MOST ACTIVE THREAD ===== */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          Most Active Discussion
-        </h2>
+        {/* REVIEWS SUMMARY */}
+        <section>
+          <h2 className="text-xl font-semibold text-slate-700 mb-6">
+            Reviews Summary
+          </h2>
 
-        <Card>
-          <CardContent className="p-6">
-            {mostActiveThread ? (
-              <>
-                <h3 className="text-lg font-bold">
-                  {mostActiveThread.title}
-                </h3>
-                <p className="text-gray-500 mt-2">
-                  {mostActiveThread.comment_count} comments
+          <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
+            <CardContent className="p-6">
+              <p className="text-slate-600 font-medium">
+                Total Reviews Submitted
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 mt-2">
+                {stats.totalReviews}
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* DISCUSSION ACTIVITY CHART */}
+        <section>
+          <h2 className="text-xl font-semibold text-slate-700 mb-6">
+            Discussion Activity
+          </h2>
+
+          <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
+            <CardContent className="p-6 h-96">
+              {threads.length === 0 ? (
+                <p className="text-slate-400 text-center">
+                  No discussions yet
                 </p>
-              </>
-            ) : (
-              <p className="text-gray-400">
-                No discussions available
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="comments"
+                      fill="#4f46e5"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </section>
 
-      {/* ===== RECENT DISCUSSIONS ===== */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          Recent Discussions
-        </h2>
-
-        <div className="space-y-4">
-          {recentThreads.length === 0 ? (
-            <p className="text-gray-400">
-              No recent discussions
-            </p>
-          ) : (
-            recentThreads.map((thread) => (
-              <Card key={thread.id}>
-                <CardContent className="p-4">
-                  <p className="font-semibold">
-                    {thread.title}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {thread.comment_count} comments
-                  </p>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* ===== ANALYTICS CHART ===== */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          Discussion Activity
-        </h2>
-
-        <Card>
-          <CardContent className="p-6 h-80">
-            {chartData.length === 0 ? (
-              <p className="text-gray-400">
-                No data to display
-              </p>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="comments" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      </main>
     </div>
   );
 };
 
 const StatCard = ({ title, value }) => (
-  <Card className="shadow-sm hover:shadow-md transition">
+  <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
     <CardContent className="p-6">
-      <p className="text-gray-500">{title}</p>
-      <h2 className="text-2xl font-bold">
-        {value || 0}
-      </h2>
+      <p className="text-sm text-slate-500 font-medium">{title}</p>
+      <h2 className="text-3xl font-bold text-slate-800 mt-2">{value}</h2>
     </CardContent>
   </Card>
 );

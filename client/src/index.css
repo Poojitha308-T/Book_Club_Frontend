@@ -126,4 +126,6 @@ html, body, #root {
   height: 100%;
   margin: 0;
   border-radius: 0 !important;
+  width: 100%;
+  overflow-x: hidden;
 }
