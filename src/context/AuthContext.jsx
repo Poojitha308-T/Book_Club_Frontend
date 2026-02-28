@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../path/to/apiClient"; // adjust path
 
 export const AuthContext = createContext();
 
@@ -17,15 +17,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/users/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const res = await apiClient.get("/users/me");
         setUser(res.data.user);
       } catch (error) {
         localStorage.removeItem("token");
