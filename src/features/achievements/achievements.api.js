@@ -1,7 +1,14 @@
+
 import api from "@/services/apiClient";
 
-// Fetch user achievements
-export const getUserAchievements = async (userId) => {
-  const res = await api.get("/achievements", { params: { userId } });
+// Fetch all achievements for the user
+export const getAchievements = async () => {
+  const res = await api.get("/achievements");
+  return res.data;
+};
+
+// Add a new achievement (admin or user)
+export const addAchievement = async (achievementData) => {
+  const res = await api.post("/achievements", achievementData);
   return res.data;
 };

@@ -1,107 +1,147 @@
-// src/features/library/pages/LibraryPage.jsx
 import { useEffect, useState } from "react";
+import { getUserLibrary, addBookToLibrary, removeBookFromLibrary } from "../library.api";
+import { getAllBooks } from "@/features/books/books.api";
 import { toast } from "react-toastify";
-import {
-  getUserLibrary,
-  removeBookFromLibrary,
-  updateBookStatus,
-} from "../library.api";
-import LibraryCard from "../components/LibraryCard";
+import { Card, CardContent } from "@/components/ui/card";
 
 const LibraryPage = () => {
+  const [library, setLibrary] = useState([]);
   const [books, setBooks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("to_read"); // NEW
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filteredBooks, setFilteredBooks] = useState([]);
 
   useEffect(() => {
+    const fetchLibrary = async () => {
+      try {
+        const libRes = await getUserLibrary();
+        setLibrary(libRes.library ?? []);
+
+        const allBooksRes = await getAllBooks();
+        setBooks(allBooksRes.books ?? []);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch library or books");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchLibrary();
   }, []);
 
-  const fetchLibrary = async () => {
+  useEffect(() => {
+    const libIds = library.map((b) => b.book_id);
+    setFilteredBooks(books.filter((b) => !libIds.includes(b.id)));
+  }, [books, library]);
+
+  // Add book to library with status
+  const handleAddToLibrary = async () => {
+    if (!selectedBook) return toast.error("Select a book to add");
+
     try {
-      setLoading(true);
-      const data = await getUserLibrary();
-      setBooks(data || []);
-    } catch (error) {
-      toast.error("Failed to load library");
-      console.error(error);
-    } finally {
-      setLoading(false);
+      const res = await addBookToLibrary(selectedBook, selectedStatus); // pass status now
+      if (res.success) {
+        toast.success(res.message || "Book added to library");
+        setSelectedBook("");
+        setSelectedStatus("to_read");
+        const libRes = await getUserLibrary();
+        setLibrary(libRes.library ?? []);
+      } else {
+        toast.error(res.message || "Failed to add book");
+      }
+    } catch (err) {
+      toast.error("Failed to add book");
+      console.error(err);
     }
   };
 
-  const handleRemove = async (bookId) => {
+  const handleRemoveFromLibrary = async (bookId) => {
+    if (!bookId) return;
+
     try {
-      await removeBookFromLibrary(bookId);
-      toast.success("Book removed from library");
-      setBooks((prev) => prev.filter((b) => b.book_id !== bookId));
-    } catch {
+      const res = await removeBookFromLibrary(bookId);
+      if (res.success) {
+        toast.success("Book removed from library");
+        const libRes = await getUserLibrary();
+        setLibrary(libRes.library ?? []);
+      } else {
+        toast.error(res.message || "Failed to remove book");
+      }
+    } catch (err) {
       toast.error("Failed to remove book");
+      console.error(err);
     }
   };
 
-  const handleStatusChange = async (bookId, status) => {
-    try {
-      await updateBookStatus(bookId, status);
-      toast.success("Book status updated");
-      // Update the book in local state without refetch
-      setBooks((prev) =>
-        prev.map((b) =>
-          b.book_id === bookId ? { ...b, status } : b
-        )
-      );
-    } catch {
-      toast.error("Failed to update status");
-    }
-  };
-
-  const filteredBooks =
-    filter === "all" ? books : books.filter((b) => b.status === filter);
+  if (loading) return <div className="p-10 text-center text-slate-500">Loading library...</div>;
 
   return (
-    <div className="min-h-screen p-10 bg-gradient-to-br from-indigo-50 via-white to-purple-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-6">My Library</h1>
-
-        {/* Filter Buttons */}
-        <div className="flex gap-3 mb-6">
-          {["all", "reading", "completed", "to_read"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg ${
-                filter === f
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 dark:text-white"
-              }`}
+    <div className="w-full overflow-x-hidden px-4 py-6 max-w-7xl mx-auto">
+      {/* Add Book */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold text-slate-700 mb-4">Add Book to Library</h2>
+        <Card className="border border-slate-200 shadow-sm">
+          <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center">
+            <select
+              className="flex-1 border p-2 rounded"
+              value={selectedBook}
+              onChange={(e) => setSelectedBook(e.target.value)}
             >
-              {f}
-            </button>
-          ))}
-        </div>
+              <option value="">Select Book</option>
+              {filteredBooks.map((b) => (
+                <option key={b.id} value={b.id}>{b.title}</option>
+              ))}
+            </select>
 
-        {/* Books Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-gray-300 dark:bg-gray-700 rounded-2xl" />
-            ))}
-          </div>
-        ) : filteredBooks.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-300">No books in this category.</p>
+            {/* Status dropdown */}
+            <select
+              className="border p-2 rounded"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="to_read">To Read</option>
+              <option value="reading">Reading</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <button
+              onClick={handleAddToLibrary}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Add
+            </button>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Library List */}
+      <section>
+        <h2 className="text-xl font-semibold text-slate-700 mb-4">My Library</h2>
+        {library.length === 0 ? (
+          <p className="text-slate-400">No books in your library yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {filteredBooks.map((book) => (
-              <LibraryCard
-                key={book.book_id}
-                book={book}
-                onRemove={handleRemove}
-                onUpdateStatus={handleStatusChange}
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {library.map((b) => (
+              <Card key={b.book_id} className="border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                <CardContent className="p-4">
+                  <h3 className="font-medium text-lg">{b.title}</h3>
+                  <p className="text-sm text-slate-500 mt-1">Status: {b.status}</p>
+                  {b.avgRating != null && (
+                    <p className="text-sm mt-1">Avg Rating: {b.avgRating.toFixed(1)} ⭐</p>
+                  )}
+                </CardContent>
+                <button
+                  onClick={() => handleRemoveFromLibrary(b.book_id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-b hover:bg-red-600"
+                >
+                  Remove
+                </button>
+              </Card>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

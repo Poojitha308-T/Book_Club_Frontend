@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getBookById } from "@/services/books.api";
+import { getBookById } from "@/services/book.service";
 import { toast } from "react-toastify";
 
 const BookDetailsPage = () => {

@@ -1,6 +1,6 @@
-// src/features/goals/components/GoalCard.jsx
+
 import React from "react";
-import ProgressBar from "@/components/ProgressBar";
+import ProgressBar from "@/features/goals/components/GoalCard";
 
 const GoalCard = ({ goal }) => {
   const { title, current, target } = goal;

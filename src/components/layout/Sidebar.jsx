@@ -1,8 +1,9 @@
-import { X, Book, Home, Users, BarChart2, MessageCircle, Trophy, CheckSquare, Bell, Calendar } from "lucide-react";
+import { X, Book, Home, Users, BarChart2, Trophy, Bell, CalendarCheck, CheckSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
-  const navStyle = "flex items-center px-4 py-2 rounded-lg transition-all duration-200 font-medium";
+  const navStyle =
+    "flex items-center px-4 py-2 rounded-lg transition-all duration-200 font-medium";
 
   return (
     <>
@@ -52,6 +53,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </NavLink>
 
           <NavLink
+            to="/library"
+            className={({ isActive }) =>
+              `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
+            }
+          >
+            <CheckSquare size={18} className="mr-2" />
+            Library
+          </NavLink>
+
+          <NavLink
             to="/book-suggestions"
             className={({ isActive }) =>
               `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
@@ -62,32 +73,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </NavLink>
 
           <NavLink
-            to="/discussions"
-            className={({ isActive }) =>
-              `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
-            }
-          >
-            <MessageCircle size={18} className="mr-2" />
-            Discussions
-          </NavLink>
-
-          <NavLink
-            to="/reviews/1"
-            className={({ isActive }) =>
-              `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
-            }
-          >
-            <CheckSquare size={18} className="mr-2" />
-            Reviews
-          </NavLink>
-
-          <NavLink
             to="/goals"
             className={({ isActive }) =>
               `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
             }
           >
-            <BarChart2 size={18} className="mr-2" />
+            <CheckSquare size={18} className="mr-2" />
             Goals
           </NavLink>
 
@@ -117,7 +108,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               `${navStyle} ${isActive ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`
             }
           >
-            <Calendar size={18} className="mr-2" />
+            <CalendarCheck size={18} className="mr-2" />
             Meetings
           </NavLink>
 

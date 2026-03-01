@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserAchievements } from "../achievements.api";
+import { getAchievements } from "../achievements.api";
 import AchievementCard from "../components/AchievementCard";
 import { toast } from "react-toastify";
 
@@ -10,7 +10,7 @@ const AchievementsPage = () => {
   const fetchAchievements = async () => {
     try {
       setLoading(true);
-      const data = await getUserAchievements(localStorage.getItem("userId"));
+      const data = await getAchievements(localStorage.getItem("userId"));
       setAchievements(data || []);
     } catch (err) {
       toast.error("Failed to load achievements");

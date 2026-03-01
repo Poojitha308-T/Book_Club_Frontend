@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { routes } from "./router.config.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { routes } from "./routes.config";
+import ProtectedRoute from "./ProtectedRoute";
 
 const Router = ({ isAuthenticated }) => {
   const renderRoutes = (routeArray) =>

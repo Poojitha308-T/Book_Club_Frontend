@@ -1,4 +1,3 @@
-import React from "react";
 import LandingPage from "@/features/landing/pages/LandingPage";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import SignupPage from "@/features/auth/pages/SignupPage";
@@ -8,13 +7,13 @@ import BookDetailsPage from "@/features/books/pages/BookDetailsPage.jsx";
 import BookSuggestionsPage from "@/features/suggestions/BookSuggestionsPage";
 import UsersPage from "@/features/users/UsersPage";
 import LibraryPage from "@/features/library/pages/LibraryPage";
-import DiscussionsPage from "@/features/discussions/pages/DiscussionsPage";
-import DiscussionDetailsPage from "@/features/discussions/pages/DiscussionDetailsPage";
-import ReviewsPage from "@/features/reviews/pages/ReviewsPage";
+
+// New modules
 import GoalsPage from "@/features/goals/pages/GoalsPage";
 import AchievementsPage from "@/features/achievements/pages/AchievementsPage";
 import NotificationsPage from "@/features/notifications/pages/NotificationsPage";
 import MeetingsPage from "@/features/meetings/pages/MeetingsPage";
+
 import AppLayout from "./AppLayout";
 
 // Define all routes
@@ -28,15 +27,12 @@ export const routes = [
 
   /* ================= PROTECTED ROUTES ================= */
   {
-    element: <AppLayout />,
+    element: <AppLayout />, // Wrapper layout for protected routes
     protected: true,
     children: [
       { path: "/dashboard", element: <DashboardPage /> },
       { path: "/library", element: <LibraryPage /> },
       { path: "/book-suggestions", element: <BookSuggestionsPage /> },
-      { path: "/discussions", element: <DiscussionsPage /> },
-      { path: "/discussions/:id", element: <DiscussionDetailsPage /> },
-      { path: "/reviews/:bookid", element: <ReviewsPage /> },
       { path: "/goals", element: <GoalsPage /> },
       { path: "/achievements", element: <AchievementsPage /> },
       { path: "/notifications", element: <NotificationsPage /> },
