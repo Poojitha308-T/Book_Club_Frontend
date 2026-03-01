@@ -1,26 +1,34 @@
 // src/features/discussions/discussions.api.js
 import apiClient from "@/services/apiClient";
 
-// Fetch all discussion threads
-export const getThreads = async () => {
-  const res = await apiClient.get("/discussions");
-  return res.data; // array of threads
-};
-
-// Fetch single thread details (with comments)
-export const getThreadById = async (threadId) => {
-  const res = await apiClient.get(`/discussions/${threadId}`);
-  return res.data;
-};
-
 // Create a new thread
-export const createThread = async (data) => {
-  const res = await apiClient.post("/discussions", data);
-  return res.data;
+export const createThread = async ({ bookId, title }) => {
+  const res = await apiClient.post("/discussions", { bookId, title });
+  return res.data.thread;
 };
 
-// Post a comment/reply
-export const postComment = async (data) => {
-  const res = await apiClient.post("/discussions/comments", data);
-  return res.data;
+// Get threads for a book (with pagination)
+export const getThreadsByBook = async ({ bookId, limit = 10, page = 1 }) => {
+  const res = await apiClient.get("/discussions", {
+    params: { bookId, limit, page },
+  });
+  return res.data.threads;
+};
+
+// Add comment to a thread
+export const addComment = async ({ threadId, content, parentId = null }) => {
+  const res = await apiClient.post("/discussions/comments", {
+    threadId,
+    content,
+    parentId,
+  });
+  return res.data.comment;
+};
+
+// Get comments for a thread (with pagination)
+export const getComments = async ({ threadId, limit = 10, page = 1 }) => {
+  const res = await apiClient.get("/discussions/comments", {
+    params: { threadId, limit, page },
+  });
+  return res.data.comments;
 };

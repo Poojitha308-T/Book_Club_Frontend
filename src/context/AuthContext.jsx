@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import apiClient from "../../src/services/apiClient"; // adjust path
+import apiClient from "@/src/services/apiClient";
 
 export const AuthContext = createContext();
 
@@ -30,8 +30,13 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, []);
 
+   const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

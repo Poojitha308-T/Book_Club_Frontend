@@ -1,6 +1,5 @@
-// src/features/suggestions/VoteButton.jsx
 import React, { useState } from "react";
-import { voteSuggestion } from "../../services/suggestionService";
+import { voteSuggestion } from "@/services/suggestionService";
 import { toast } from "react-toastify";
 
 const VoteButton = ({ suggestionId, votesCount, onVote }) => {
@@ -23,7 +22,7 @@ const VoteButton = ({ suggestionId, votesCount, onVote }) => {
     <button
       onClick={handleVote}
       disabled={loading}
-      className="px-3 py-1 bg-green-500 text-white rounded"
+      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
     >
       {loading ? "Voting..." : `Vote (${votesCount})`}
     </button>

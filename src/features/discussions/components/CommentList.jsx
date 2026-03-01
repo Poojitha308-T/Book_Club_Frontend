@@ -1,100 +1,59 @@
 import { useState } from "react";
 import ReactQuill from "react-quill";
 import { Button } from "@/components/ui/button";
-import DOMPurify from "dompurify";
-import { postComment } from "../discussions.api";
+import { addComment } from "../discussions.api";
 import { toast } from "react-toastify";
-import "react-quill/dist/quill.snow.css";
 
-/* ----------- Build Comment Map ----------- */
 const buildCommentMap = (comments) => {
   const map = {};
-  comments.forEach((comment) => {
-    const parent = comment.parent_id || null;
-    if (!map[parent]) {
-      map[parent] = [];
-    }
-    map[parent].push(comment);
+  comments.forEach((c) => {
+    const parent = c.parent_id || null;
+    if (!map[parent]) map[parent] = [];
+    map[parent].push(c);
   });
   return map;
 };
 
-/* ----------- Comment Item ----------- */
-const CommentItem = ({
-  comment,
-  level,
-  renderChildren,
-  setComments,
-}) => {
+const CommentItem = ({ comment, level = 0, setComments, renderChildren }) => {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyContent, setReplyContent] = useState("");
 
   const handleReply = async () => {
-    if (!replyContent || replyContent === "<p><br></p>") {
-      toast.error("Reply cannot be empty");
-      return;
-    }
-
+    if (!replyContent || replyContent === "<p><br></p>")
+      return toast.error("Reply cannot be empty");
     try {
-      const newReply = await postComment({
-        thread_id: comment.thread_id,
-        parent_id: comment.id,
+      const newReply = await addComment({
+        threadId: comment.thread_id,
         content: replyContent,
+        parentId: comment.id,
       });
-
-      // Add reply locally
       setComments((prev) => [...prev, newReply]);
-
       setReplyContent("");
       setReplyOpen(false);
       toast.success("Reply posted!");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to post reply");
     }
   };
 
   return (
-    <div
-      className="flex flex-col space-y-3"
-      style={{ marginLeft: `${level * 24}px` }} // FIXED Tailwind issue
-    >
+    <div style={{ marginLeft: level * 24 }} className="space-y-2">
       <div className="bg-gray-50 p-4 rounded-xl shadow-sm">
         <p className="text-sm text-gray-500">
-          {comment.user_name} •{" "}
-          {new Date(comment.created_at).toLocaleString()}
+          {comment.user_name} • {new Date(comment.created_at).toLocaleString()}
         </p>
-
-        <div
-          className="prose prose-sm max-w-full"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(comment.content),
-          }}
-        />
-
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setReplyOpen(!replyOpen)}
-          className="mt-2"
-        >
+        <div dangerouslySetInnerHTML={{ __html: comment.content }} className="prose max-w-full" />
+        <Button size="sm" variant="ghost" onClick={() => setReplyOpen(!replyOpen)} className="mt-2">
           Reply
         </Button>
       </div>
 
-      {/* Reply Editor */}
       {replyOpen && (
         <div className="space-y-2">
-          <ReactQuill
-            theme="snow"
-            value={replyContent}
-            onChange={setReplyContent}
-            placeholder="Write your reply..."
-          />
+          <ReactQuill value={replyContent} onChange={setReplyContent} />
           <div className="flex justify-end">
-            <Button size="sm" onClick={handleReply}>
-              Post Reply
-            </Button>
+            <Button size="sm" onClick={handleReply}>Post Reply</Button>
           </div>
         </div>
       )}
@@ -104,33 +63,22 @@ const CommentItem = ({
   );
 };
 
-/* ----------- Comment List ----------- */
 const CommentList = ({ comments, setComments }) => {
-  if (!comments || comments.length === 0) {
-    return (
-      <p className="text-gray-500">
-        No comments yet. Be the first to comment!
-      </p>
-    );
-  }
+  if (!comments || comments.length === 0) return <p className="text-gray-500">No comments yet.</p>;
+  const map = buildCommentMap(comments);
 
-  const commentMap = buildCommentMap(comments);
-
-  const renderTree = (parentId = null, level = 0) => {
-    return commentMap[parentId]?.map((comment) => (
+  const renderTree = (parentId = null, level = 0) =>
+    map[parentId]?.map((c) => (
       <CommentItem
-        key={comment.id}
-        comment={comment}
+        key={c.id}
+        comment={c}
         level={level}
         setComments={setComments}
-        renderChildren={() =>
-          renderTree(comment.id, level + 1)
-        }
+        renderChildren={() => renderTree(c.id, level + 1)}
       />
     ));
-  };
 
-  return <div className="space-y-6">{renderTree()}</div>;
+  return <div className="space-y-4">{renderTree()}</div>;
 };
 
 export default CommentList;

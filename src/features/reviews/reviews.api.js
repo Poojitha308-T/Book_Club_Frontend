@@ -1,19 +1,13 @@
-import api from "../../lib/axios";
+import api from "@/services/apiClient";
 
 // GET reviews by bookId (query param)
 export const getBookReviews = async (bookId) => {
   const res = await api.get("/reviews", { params: { bookId } });
-  return res.data;
+  return res.data; // { success, reviews: [...] }
 };
 
-// POST review for a book (URL param must match backend)
+// POST review for a book
 export const addBookReview = async (bookId, rating, comment) => {
-  try {
-    // ⚡ URL includes bookId as param
-    const res = await api.post(`/reviews/${bookId}`, { rating, comment });
-    return res.data;
-  } catch (err) {
-    console.error(`Failed to add review for book ${bookId}`, err);
-    throw err;
-  }
+  const res = await api.post(`/reviews/${bookId}`, { rating, comment });
+  return res.data;
 };

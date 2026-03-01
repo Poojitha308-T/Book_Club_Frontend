@@ -13,13 +13,13 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     );
   }
 
-  // Not logged in
   if (!user) {
+    // Not logged in
     return <Navigate to="/login" replace />;
   }
 
-  // Role-based protection
   if (requiredRole && user.role !== requiredRole) {
+    // Role-based protection
     return <Navigate to="/dashboard" replace />;
   }
 

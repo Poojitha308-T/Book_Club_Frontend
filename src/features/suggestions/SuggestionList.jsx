@@ -1,6 +1,5 @@
-// src/features/suggestions/SuggestionList.jsx
 import React, { useEffect, useState } from "react";
-import { getSuggestions } from "../../services/suggestionService";
+import { getSuggestions } from "@/services/suggestionService";
 import SuggestionItem from "./SuggestionItem";
 import SuggestionModal from "./SuggestionModal";
 import { toast } from "react-toastify";
@@ -12,7 +11,7 @@ const SuggestionList = ({ user }) => {
   const fetchSuggestions = async () => {
     try {
       const data = await getSuggestions();
-      setSuggestions(data);
+      setSuggestions(data || []);
     } catch (err) {
       toast.error("Failed to load suggestions");
     }
@@ -23,11 +22,11 @@ const SuggestionList = ({ user }) => {
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Book Suggestions</h2>
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           onClick={() => setModalOpen(true)}
         >
           Add Suggestion

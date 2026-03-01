@@ -1,7 +1,6 @@
-// src/features/suggestions/SuggestionItem.jsx
 import React from "react";
 import VoteButton from "./VoteButton";
-import { approveSuggestion } from "../../services/suggestionService";
+import { approveSuggestion } from "@/services/suggestionService";
 import { toast } from "react-toastify";
 
 const SuggestionItem = ({ suggestion, onRefresh, user }) => {
@@ -18,28 +17,32 @@ const SuggestionItem = ({ suggestion, onRefresh, user }) => {
   };
 
   return (
-    <div className="border p-3 rounded flex justify-between items-center mb-2">
+    <div className="bg-white p-4 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
       <div>
-        <h3 className="font-bold">{suggestion.title}</h3>
-        <p className="text-sm">{suggestion.author}</p>
-        <p className="text-gray-600">{suggestion.description}</p>
-        <p className="text-xs text-gray-400">
-          Suggested by: {suggestion.suggested_by_name}
-        </p>
+        <h4 className="font-semibold text-lg">{suggestion.title}</h4>
+        <p className="text-gray-500">Author: {suggestion.author}</p>
+        {suggestion.description && <p className="text-gray-500">{suggestion.description}</p>}
+        <p className="text-sm text-gray-400">Suggested by: {suggestion.suggested_by_name}</p>
       </div>
+
       <div className="flex items-center space-x-2">
         <VoteButton
           suggestionId={suggestion.id}
           votesCount={suggestion.votes_count}
           onVote={onRefresh}
         />
-        {isAdmin && suggestion.status !== "approved" && (
+
+        {isAdmin && suggestion.status === "open" && (
           <button
             onClick={handleApprove}
-            className="px-3 py-1 bg-red-600 text-white rounded"
+            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
           >
             Approve
           </button>
+        )}
+
+        {suggestion.status === "approved" && (
+          <span className="text-green-600 font-semibold">Approved</span>
         )}
       </div>
     </div>
