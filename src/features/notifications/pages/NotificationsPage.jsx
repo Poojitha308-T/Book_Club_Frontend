@@ -23,7 +23,7 @@ const NotificationsPage = () => {
     try {
       await markNotificationRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
     } catch (err) {
       console.error(err);
@@ -47,14 +47,14 @@ const NotificationsPage = () => {
         <div
           key={n.id}
           className={`p-4 rounded-lg shadow-sm flex justify-between items-center ${
-            n.read ? "bg-gray-50" : "bg-indigo-50"
+            n.is_read ? "bg-gray-50" : "bg-indigo-50"
           }`}
         >
           <div>
             <p className="text-gray-800">{n.message}</p>
             <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleString()}</p>
           </div>
-          {!n.read && (
+          {!n.is_read && (
             <button
               onClick={() => handleMarkRead(n.id)}
               className="px-2 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"

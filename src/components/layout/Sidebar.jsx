@@ -1,10 +1,19 @@
-import { X, Book, Home, Users, BarChart2, Trophy, Bell, CalendarCheck, CheckSquare } from "lucide-react";
+import {
+  X,
+  Book,
+  Home,
+  Users,
+  BarChart2,
+  Trophy,
+  Bell,
+  CalendarCheck,
+  CheckSquare,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navStyle =
-    "flex items-center px-4 py-2 rounded-lg transition-all duration-200 font-medium";
-
+    "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 font-medium";
   return (
     <>
       {/* Overlay for mobile */}
@@ -17,10 +26,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300
-       ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-    lg:translate-x-0
-  `}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 
+  bg-white/80 dark:bg-gray-900/80 
+  backdrop-blur-xl 
+  border-r border-white/20 dark:border-white/10 
+  shadow-xl 
+  transform transition-transform duration-300
+  ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+  lg:translate-x-0`}
       >
         {/* Mobile header */}
         <div className="flex justify-between items-center px-4 py-4 lg:hidden border-b">

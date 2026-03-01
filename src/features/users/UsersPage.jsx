@@ -17,17 +17,23 @@ const UsersPage = () => {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await getAllUsers();
-      setUsers(data);
-    } catch {
+  try {
+    setLoading(true);
+    const data = await getAllUsers();
+    setUsers(data);
+  } catch (err) {
+    console.error("Error fetching users:", err.response?.data || err);
+    if (err.response?.status === 403) {
+      toast.error("Access denied. Admins only.");
+    } else if (err.response?.status === 401) {
+      toast.error("You must log in first.");
+    } else {
       toast.error("Failed to fetch users");
-    } finally {
-      setLoading(false);
     }
-  };
-
+  } finally {
+    setLoading(false);
+  }
+};
   const handleDelete = async () => {
     try {
       await deleteUser(confirmUser.id);

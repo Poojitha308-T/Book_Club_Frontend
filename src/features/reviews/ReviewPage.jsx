@@ -18,8 +18,8 @@ const ReviewsPage = () => {
         // Precompute average ratings if included in backend
         setBooks(libBooks);
       } catch (err) {
-        console.error(err);
-        toast.error("Failed to fetch library");
+        console.log(err.response?.data); // 👈 ADD THIS
+        toast.error(err.response?.data?.message || "Failed to add review");
       }
     };
     fetchLibrary();
@@ -41,7 +41,9 @@ const ReviewsPage = () => {
               <h3 className="font-semibold">{book.title}</h3>
               <p className="text-sm text-gray-500">{book.author}</p>
               {book.avgRating != null && (
-                <p className="text-yellow-500">{book.avgRating.toFixed(1)} ⭐</p>
+                <p className="text-yellow-500">
+                  {book.avgRating.toFixed(1)} ⭐
+                </p>
               )}
             </div>
           ))}

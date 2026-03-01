@@ -1,6 +1,7 @@
 import apiClient from "@/services/apiClient";
-
+import axios from "axios";
 // Get all suggestions
+const API_URL = import.meta.env.VITE_API_BASE_URL; 
 export const getSuggestions = async () => {
   const res = await apiClient.get("/suggestions");
   return res.data;
@@ -20,6 +21,19 @@ export const voteSuggestion = async (id) => {
 
 // Approve a suggestion (admin)
 export const approveSuggestion = async (id) => {
-  const res = await apiClient.put(`/suggestions/${id}/approve`);
-  return res.data;
-};
+  const token = localStorage.getItem("token"); // get JWT from localStorage
+  if (!token) throw new Error("User is not logged in");
+
+  // console.log("Approving suggestion ID:", id, "with token:", token);
+
+  const response = await axios.patch(
+    `${API_URL}/suggestions/${id}/approve`,
+    {}, // no body needed
+    {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ pass token
+      },
+    }
+  );
+  return response.data;
+}

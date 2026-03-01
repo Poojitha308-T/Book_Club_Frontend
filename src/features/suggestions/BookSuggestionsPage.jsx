@@ -1,26 +1,36 @@
 import React from "react";
 import SuggestionList from "./SuggestionList";
+import {jwtDecode} from "jwt-decode"; // ✅ Correct import
 
-/**
- * BookSuggestionsPage
- * Main page for users to view and suggest books.
- * Admins can approve suggestions.
- */
 const BookSuggestionsPage = () => {
-  // Get current user info (role) from localStorage or auth context
-  const user = {
-    role: localStorage.getItem("role") || "user",
-    name: localStorage.getItem("name") || "Guest",
-    email: localStorage.getItem("email") || "",
+  const token = localStorage.getItem("token");
+
+  let user = {
+    role: "user",
+    name: "Guest",
+    email: "",
   };
 
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+
+      user = {
+        role: decoded?.role || "user",
+        name: decoded?.name || "User",
+        email: decoded?.email || "",
+      };
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 min-h-screen bg-gray-50 dark:bg-gray-900 transition-all">
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+    <div className="max-w-6xl mx-auto p-6 sm:p-8 space-y-6 min-h-screen bg-gray-50 dark:bg-gray-900 transition-all">
+      <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-6">
         Book Suggestions
       </h1>
 
-      {/* Suggestion List & Admin Actions */}
       <SuggestionList user={user} />
     </div>
   );

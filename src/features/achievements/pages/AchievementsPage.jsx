@@ -11,7 +11,7 @@ const AchievementsPage = () => {
     try {
       setLoading(true);
       const data = await getAchievements(localStorage.getItem("userId"));
-      setAchievements(data || []);
+      setAchievements(data.achievements || []);
     } catch (err) {
       toast.error("Failed to load achievements");
     } finally {
