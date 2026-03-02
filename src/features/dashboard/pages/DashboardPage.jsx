@@ -7,7 +7,8 @@ import {
 import { getAllBooks } from "@/features/books/books.api";
 import { getBookReviews, addBookReview } from "@/features/reviews/reviews.api";
 import { getUserGoals } from "@/features/goals/goals.api";
-import { getAchievements } from "@/features/achievements/achievements.api";
+import { getUserAchievements } from "@/features/achievements/achievements.api";
+import AchievementCard from "@/features/achievements/components/AchievementCard";
 import { toast } from "react-toastify";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -68,7 +69,8 @@ const DashboardPage = () => {
         const statsRes = await getDashboardStats();
         const booksRes = await getAllBooks();
         const goalsRes = await getUserGoals();
-        const achievementsRes = await getAchievements();
+        const achievementsRes = await getUserAchievements();
+        setAchievements(achievementsRes.data || []);
 
         setStats({
           totalUsers: statsRes?.data?.totalUsers ?? 0,
@@ -298,7 +300,7 @@ const DashboardPage = () => {
           </div>
         </section>
 
-        {/* GOALS & ACHIEVEMENTS */}
+        
         {/* GOALS & ACHIEVEMENTS */}
         <section>
           <h2 className="text-xl font-semibold text-slate-700 mb-6">

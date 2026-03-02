@@ -1,8 +1,8 @@
 import apiClient from "@/services/apiClient";
 
 export const getAllUsers = async () => {
-  const res = await apiClient.get("/users");
-  return res.data.users || res.data;
+  const res = await apiClient.get("/users"); 
+  return res.data.users || []; // <-- return the array directly
 };
 
 export const deleteUser = async (id) => {
