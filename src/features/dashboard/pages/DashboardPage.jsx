@@ -145,63 +145,64 @@ const DashboardPage = () => {
     }
   };
 
- // --- fetch reviews for a selected book ---
-const fetchReviewsForBook = async (bookId) => {
-  if (!bookId) return setReviews([]);
+  // --- fetch reviews for a selected book ---
+  const fetchReviewsForBook = async (bookId) => {
+    if (!bookId) return setReviews([]);
 
-  try {
-    const reviewsData = await getBookReviews(bookId); 
-    // getBookReviews should return an array directly
-    setReviews(reviewsData ?? []);
-  } catch (err) {
-    console.error("Fetch reviews failed:", err.response?.data || err.message);
-    setReviews([]);
-    toast.error("Failed to fetch reviews for this book");
-  }
-};
+    try {
+      const reviewsData = await getBookReviews(bookId);
+      // getBookReviews should return an array directly
+      setReviews(reviewsData ?? []);
+    } catch (err) {
+      console.error("Fetch reviews failed:", err.response?.data || err.message);
+      setReviews([]);
+      toast.error("Failed to fetch reviews for this book");
+    }
+  };
 
-// --- handle adding a review ---
-const handleAddReview = async () => {
-  if (!selectedBook) {
-    toast.error("Please select a book first");
-    return;
-  }
-  if (!reviewText.trim()) {
-    toast.error("Write a review before submitting");
-    return;
-  }
+  // --- handle adding a review ---
+  const handleAddReview = async () => {
+    if (!selectedBook) {
+      toast.error("Please select a book first");
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast.error("Write a review before submitting");
+      return;
+    }
 
-  try {
-    // Send review to backend
-    await addBookReview(selectedBook, reviewRating, reviewText);
+    try {
+      // Send review to backend
+      await addBookReview(selectedBook, reviewRating, reviewText);
 
-    toast.success("Review added successfully!");
+      toast.success("Review added successfully!");
 
-    // ✅ Reset the review input and rating
-    setReviewText("");        // clear textarea
-    setReviewRating(5);       // reset rating to default 5 stars
+      // ✅ Reset the review input and rating
+      setReviewText(""); // clear textarea
+      setReviewRating(5); // reset rating to default 5 stars
 
-    // Refresh the reviews list
-    fetchReviewsForBook(selectedBook);
+      // Refresh the reviews list
+      fetchReviewsForBook(selectedBook);
 
-    // Optional: update library avgRating immediately
-    const updatedLibrary = library.map((b) =>
-      b.book_id === selectedBook
-        ? {
-            ...b,
-            avgRating: reviews.length
-              ? (reviews.reduce((sum, r) => sum + r.rating, 0) + reviewRating) /
-                (reviews.length + 1)
-              : reviewRating,
-          }
-        : b
-    );
-    setLibrary(updatedLibrary);
-  } catch (err) {
-    console.error("Add review failed:", err.response?.data || err.message);
-    toast.error(err.response?.data?.message || "Failed to add review");
-  }
-};
+      // Optional: update library avgRating immediately
+      const updatedLibrary = library.map((b) =>
+        b.book_id === selectedBook
+          ? {
+              ...b,
+              avgRating: reviews.length
+                ? (reviews.reduce((sum, r) => sum + r.rating, 0) +
+                    reviewRating) /
+                  (reviews.length + 1)
+                : reviewRating,
+            }
+          : b,
+      );
+      setLibrary(updatedLibrary);
+    } catch (err) {
+      console.error("Add review failed:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Failed to add review");
+    }
+  };
   if (loading)
     return (
       <div className="p-10 text-center text-slate-500">
@@ -211,29 +212,31 @@ const handleAddReview = async () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:from-gray-900 dark:via-slate-900 dark:to-black transition-colors">
-    <main className="px-4 sm:px-6 lg:px-10 py-10 space-y-14 max-w-7xl mx-auto">
+      <main className="px-4 sm:px-6 lg:px-10 py-10 space-y-14 max-w-7xl mx-auto">
+        {/* PLATFORM OVERVIEW */}
+        <section>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 tracking-tight">
+            Platform Overview
+          </h2>
 
-      {/* PLATFORM OVERVIEW */}
-      <section>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 tracking-tight">
-          Platform Overview
-        </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            <StatCard title="Total Users" value={stats.totalUsers} />
+            <StatCard title="Total Books" value={stats.totalBooks} />
+            <StatCard title="Total Reviews" value={stats.totalReviews} />
+            <StatCard
+              title="Total Discussions"
+              value={stats.totalDiscussions}
+            />
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-          <StatCard title="Total Users" value={stats.totalUsers} />
-          <StatCard title="Total Books" value={stats.totalBooks} />
-          <StatCard title="Total Reviews" value={stats.totalReviews} />
-          <StatCard title="Total Discussions" value={stats.totalDiscussions} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
-          <StatCard title="Notifications" value={stats.totalNotifications} />
-          <StatCard
-            title="Upcoming Meetings"
-            value={stats.upcomingMeetings?.length ?? 0}
-          />
-        </div>
-      </section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
+            <StatCard title="Notifications" value={stats.totalNotifications} />
+            <StatCard
+              title="Upcoming Meetings"
+              value={stats.upcomingMeetings?.length ?? 0}
+            />
+          </div>
+        </section>
 
         {/* ADD BOOK */}
         <section>
@@ -296,14 +299,31 @@ const handleAddReview = async () => {
         </section>
 
         {/* GOALS & ACHIEVEMENTS */}
+        {/* GOALS & ACHIEVEMENTS */}
         <section>
           <h2 className="text-xl font-semibold text-slate-700 mb-6">
             Goals & Achievements
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            {goals.map((g) => (
-              <StatCard key={g.id} title={g.title} value={`${g.progress}%`} />
-            ))}
+            {goals.map((g) => {
+              const bookProgress = g.target_books
+                ? g.completed_books / g.target_books
+                : 0;
+              const pageProgress = g.target_pages
+                ? g.completed_pages / g.target_pages
+                : 0;
+              const overallProgress = Math.round(
+                ((bookProgress + pageProgress) / 2) * 100,
+              );
+
+              return (
+                <StatCard
+                  key={g.id}
+                  title={g.title}
+                  value={`${overallProgress}%`}
+                />
+              );
+            })}
             {achievements.map((a) => (
               <StatCard
                 key={a.id}

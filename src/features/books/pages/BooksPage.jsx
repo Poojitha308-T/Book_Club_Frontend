@@ -1,7 +1,6 @@
-// src/features/books/BooksPage.jsx
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Loader2 } from "lucide-react";
 import { getAllBooks, createBook, updateBook, deleteBook } from "../books.api";
 import { addBookToLibrary } from "@/features/library/library.api";
 import BookCard from "../components/BookCard";
@@ -31,22 +30,26 @@ const BooksPage = () => {
     try {
       setLoading(true);
       const res = await getAllBooks();
-      setBooks(res.books || []); // Backend returns 'books'
-    } catch {
-      toast.error("Failed to fetch books");
+      // Ensure we are setting an array
+      setBooks(res.books || res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch books:", error);
+      toast.error("Failed to load books");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (bookId) => {
-    if (!window.confirm("Delete this book?")) return;
+    if (!window.confirm("Are you sure you want to delete this book?")) return;
     try {
       await deleteBook(bookId);
-      await fetchBooks();
+      // Optimistically remove from UI
+      setBooks((prev) => prev.filter((b) => b.id !== bookId));
       toast.success("Book deleted successfully");
-    } catch {
-      toast.error("Delete failed");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Failed to delete book");
     }
   };
 
@@ -74,29 +77,27 @@ const BooksPage = () => {
     setModalOpen(true);
   };
 
-  // ✅ Updated handleSubmit for proper frontend reflection
   const handleSubmit = async (data) => {
     try {
       if (editingBook) {
-        const updatedBook = await updateBook(editingBook.id, data);
-
-        // ✅ Update local state so the changes reflect immediately
-        setBooks((prevBooks) =>
-          prevBooks.map((b) =>
-            b.id === editingBook.id ? { ...b, ...updatedBook.book } : b
-          )
-        );
-
+        // 1. Perform the update
+        await updateBook(editingBook.id, data);
+        
+        // 2. Refetch ALL books from server to ensure UI matches DB
+        // This fixes the "not reflecting" issue
+        await fetchBooks();
+        
         toast.success("Book updated successfully");
       } else {
-        const newBook = await createBook(data);
-        setBooks((prevBooks) => [...prevBooks, newBook.book]); // Add new book to state
+        const res = await createBook(data);
+        // Add new book to state
+        setBooks((prevBooks) => [...prevBooks, res.book]);
         toast.success("Book created successfully");
       }
-
       setModalOpen(false);
       setEditingBook(null);
     } catch (error) {
+      console.error("Operation failed:", error);
       toast.error(error.response?.data?.message || "Operation failed");
     }
   };
@@ -105,60 +106,69 @@ const BooksPage = () => {
     try {
       await addBookToLibrary(bookId);
       toast.success("Book added to library!");
-    } catch {
+    } catch (error) {
+      console.error("Add to library failed:", error);
       toast.error("Failed to add book to library");
     }
   };
 
   return (
-    <div className="min-h-screen p-10 bg-gradient-to-br from-indigo-50 via-white to-purple-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 md:p-10 transition-colors">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(-1)}
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white flex items-center gap-1"
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
             >
               <ArrowLeft size={20} />
-              <span className="text-sm">Back</span>
             </button>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white">
-              Books Management
-            </h1>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Books Management
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                Manage your library collection
+              </p>
+            </div>
           </div>
 
           <button
             onClick={handleAdd}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-700"
           >
-            <Plus size={18} /> Add Book
+            <Plus size={18} />
+            Add Book
           </button>
         </div>
 
+        {/* Content Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="h-64 bg-gray-300 dark:bg-gray-700 rounded-2xl"
-              />
-            ))}
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           </div>
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {books.map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onAddToLibrary={handleAddToLibrary}
-              />
-            ))}
+            {books.length > 0 ? (
+              books.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onAddToLibrary={handleAddToLibrary}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 border border-dashed border-gray-300 rounded-xl">
+                <p className="text-gray-500">No books found. Add one to get started!</p>
+              </div>
+            )}
           </div>
         )}
 
+        {/* Modal */}
         {modalOpen && (
           <BookFormModal
             isOpen={modalOpen}
