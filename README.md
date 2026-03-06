@@ -1,139 +1,157 @@
+# 📚 Book Club Management Platform – Frontend
 
-📚 Book Club Management Platform – Frontend
-Project Title
+## Project Title
 
 Book Club Management Platform – Frontend
 
-Project Description
+---
 
-The Book Club Management Platform is a modern web application designed to bring readers together in an interactive online environment. The platform allows users to discover books, manage personal reading libraries, participate in discussions, track reading progress, and unlock achievements based on their activity.
+# Project Description
 
-The frontend application provides a responsive and intuitive user interface that communicates with the backend API to deliver a seamless reading community experience.
+The **Book Club Management Platform** is a web application designed to bring readers together in an interactive online environment. It allows users to discover books, manage personal libraries, participate in discussions, and track reading progress.
 
-Features
-🔐 Authentication
+The frontend provides a responsive and user-friendly interface that interacts with the backend API to deliver a seamless experience for users. Members can manage their reading activity, join discussions with other readers, and track achievements earned through their participation in the platform.
 
-User Signup and Login
+---
 
-Secure authentication using JWT
+# ✨ Features
 
-Protected routes for authenticated users
+### 🔐 Authentication
+- User Signup
+- User Login
+- JWT-based authentication
+- Protected routes for authenticated users
 
-📚 Personal Library
+### 📚 Personal Library
+- Add books to personal library
+- Remove books from library
+- View saved books
 
-Add books to personal library
+### 🗨 Discussions
+- View discussion threads
+- Create new discussion posts
+- Engage with other members
 
-Remove books from library
+### 🏆 Achievements
+- View unlocked achievements
+- Track reading milestones
 
-Track reading status
+### 📊 Dashboard
+- Display reading statistics
+- Activity insights
+- Data visualization charts
 
-🗨 Discussions
+### 🎨 User Interface
+- Responsive layout
+- Sidebar navigation
+- Interactive charts
+- Toast notifications
+- Clean and modern UI
 
-Create discussion threads
+---
 
-View discussions from other members
+# 🛠 Tech Stack Used
 
-Engage with the community
+### Frontend Framework
+- React.js
+- Vite
 
-🏆 Achievements
+### Styling
+- CSS / Tailwind CSS / Custom styling
 
-View earned achievements
+### State Management
+- React Hooks
+- Context API
 
-Track progress based on activity
+### API Communication
+- Axios
 
-📊 Dashboard
+### Data Visualization
+- Recharts / Chart libraries
 
-Display reading statistics
+---
 
-Show activity insights
+# 📂 Project Structure
+src
+│
+├── components
+├── pages
+├── api
+├── context
+├── hooks
+├── utils
+└── main.jsx
 
-🎨 UI Features
 
-Responsive design
+---
 
-Sidebar navigation
+# ⚙ Installation Steps
 
-Interactive charts
+### 1. Clone the Repository
 
-Toast notifications for feedback
+---
 
-Tech Stack Used
-Frontend
+### 2. Navigate to the Project Folder
 
-React.js
+---
 
-Vite
+### 3. Install Dependencies
 
-Styling
+---
 
-CSS / Tailwind / Custom styling
+### 4. Setup Environment Variables
 
-State Management
+Create a `.env` file in the root directory.
 
-React Hooks
+---
 
-Context API
-
-API Communication
-
-Axios
-
-Visualization
-
-Recharts / Chart libraries
-
-Installation Steps
-1️⃣ Clone the Repository
-git clone https://github.com/your-username/book-club-frontend.git
-2️⃣ Navigate to Project Folder
-cd book-club-frontend
-3️⃣ Install Dependencies
-npm install
-4️⃣ Setup Environment Variables
-
-Create a .env file in the root directory:
-
-VITE_API_BASE_URL=http://localhost:5000/api
-5️⃣ Run the Application
-npm run dev
+### 5. Run the Development Server
 
 Application will run on:
 
-http://localhost:5173
-Deployment Link
+---
 
-Frontend Live URL:
+# 🌐 Deployment Link
 
+Frontend Live URL
 https://9a328140.book-club-frontend.pages.dev/
-Backend API Link
 
-Backend Repository / API URL:
 
+---
+
+# 🔗 Backend API Link
+
+Backend API Base URL
 https://book-club-backend-5.onrender.com
 
-Video Walkthrough
+---
 
-Project Demo Video:
+# 🎥 Video Walkthrough
 
+Project Demo Video
 https://drive.google.com/file/d/1262kjrUG_4At4kiAFB4cRu1crdUD6PB7/view?usp=sharing
-Analytics dashboard improvements
 
-🎓 Academic Value
 
-This project demonstrates:
+The walkthrough demonstrates:
 
-Role-based access control
+- User authentication
+- Library management
+- Discussions module
+- Achievements system
+- Dashboard analytics
 
-Community-driven voting system
+---
 
-Real-time UI updates
+# 🚀 Future Improvements
 
-Complex relational database interaction
+- Real-time notifications
+- Dark mode
+- Advanced search and filtering
+- Book recommendation system
+- Performance optimization
 
-State management best practices
+---
 
-Modular frontend architecture
+# 👩‍💻 Author
 
-👩‍💻 Author
-
-Poojitha Thadiboyina
+Developed as part of a full-stack project to build an interactive **Book Club community platform** where users can collaborate, share reading experiences, and discover new books.
