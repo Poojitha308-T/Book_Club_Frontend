@@ -114,7 +114,7 @@ Application will run on:
 # 🌐 Deployment Link
 
 Frontend Live URL
-https://9a328140.book-club-frontend.pages.dev/
+https://book-club-frontend.pages.dev/
 
 
 ---
