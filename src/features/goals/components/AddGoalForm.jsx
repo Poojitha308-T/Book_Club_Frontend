@@ -1,4 +1,3 @@
-// src/features/goals/components/AddGoalForm.jsx
 import { useState } from "react";
 import { addGoal } from "../goals.api";
 import { toast } from "react-toastify";
@@ -25,6 +24,7 @@ const AddGoalForm = ({ onGoalAdded }) => {
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
       });
+
       toast.success("Goal added!");
       onGoalAdded(newGoal);
 
@@ -41,15 +41,17 @@ const AddGoalForm = ({ onGoalAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-2xl shadow-md space-y-2">
-      <h3 className="font-semibold text-lg">Add New Goal</h3>
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        Add New Goal
+      </h3>
 
       <input
         type="number"
         placeholder="Target Books"
         value={targetBooks}
         onChange={(e) => setTargetBooks(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2"
+        className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
       />
 
       <input
@@ -57,27 +59,27 @@ const AddGoalForm = ({ onGoalAdded }) => {
         placeholder="Target Pages"
         value={targetPages}
         onChange={(e) => setTargetPages(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2"
+        className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
       />
 
       <input
         type="date"
         value={startDate}
         onChange={(e) => setStartDate(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2"
+        className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg p-2.5"
       />
 
       <input
         type="date"
         value={endDate}
         onChange={(e) => setEndDate(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2"
+        className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg p-2.5"
       />
 
       <button
         type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition font-medium"
         disabled={loading}
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg transition font-medium disabled:opacity-50"
       >
         {loading ? "Adding..." : "Add Goal"}
       </button>

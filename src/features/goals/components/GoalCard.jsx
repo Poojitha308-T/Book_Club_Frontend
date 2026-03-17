@@ -1,4 +1,3 @@
-// src/features/goals/components/GoalCard.jsx
 import React, { useState } from "react";
 import ProgressBar from "@/features/progress/components/ProgressBar";
 import { updateGoalProgress, deleteGoal } from "../goals.api";
@@ -30,7 +29,6 @@ const GoalCard = ({ goal, onGoalUpdated, onGoalDeleted }) => {
       });
       onGoalUpdated(updatedGoal);
     } catch (err) {
-      console.error(err.response?.data || err.message);
       toast.error("Failed to update goal");
     } finally {
       setLoading(false);
@@ -43,8 +41,7 @@ const GoalCard = ({ goal, onGoalUpdated, onGoalDeleted }) => {
       await deleteGoal({ goalId: id });
       onGoalDeleted(id);
       toast.success("Goal deleted!");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
+    } catch {
       toast.error("Failed to delete goal");
     } finally {
       setLoading(false);
@@ -52,36 +49,42 @@ const GoalCard = ({ goal, onGoalUpdated, onGoalDeleted }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-md space-y-2">
-      <h3 className="font-semibold text-lg">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-lg transition">
+      
+      <h3 className="font-semibold text-slate-900 dark:text-white">
         Goal ({new Date(start_date).toLocaleDateString()} -{" "}
         {new Date(end_date).toLocaleDateString()})
       </h3>
-      <p className="text-gray-500 text-sm">
+
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
         Books: {completed_books}/{target_books} | Pages: {completed_pages}/{target_pages}
       </p>
 
-      <ProgressBar progress={completed_books} max={target_books} label="Books" />
-      <ProgressBar progress={completed_pages} max={target_pages} label="Pages" />
+      <div className="mt-3 space-y-2">
+        <ProgressBar progress={completed_books} max={target_books} label="Books" />
+        <ProgressBar progress={completed_pages} max={target_pages} label="Pages" />
+      </div>
 
-      <div className="flex gap-2 mt-2">
+      <div className="flex flex-wrap gap-2 mt-4">
         <button
           onClick={() => handleUpdateProgress(completed_books + 1, completed_pages)}
           disabled={loading || completed_books >= target_books}
-          className="bg-green-500 text-white px-3 py-1 rounded-xl hover:bg-green-600 transition font-medium disabled:opacity-50"
+          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:opacity-50"
         >
           +Book
         </button>
+
         <button
           onClick={() => handleUpdateProgress(completed_books, completed_pages + 10)}
           disabled={loading || completed_pages >= target_pages}
-          className="bg-yellow-500 text-white px-3 py-1 rounded-xl hover:bg-yellow-600 transition font-medium disabled:opacity-50"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:opacity-50"
         >
           +10 Pages
         </button>
+
         <button
           onClick={handleDelete}
-          className="bg-red-500 text-white px-3 py-1 rounded-xl hover:bg-red-600 transition font-medium"
+          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm"
         >
           Delete
         </button>

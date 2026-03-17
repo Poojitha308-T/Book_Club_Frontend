@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Plus, ArrowLeft, Loader2 } from "lucide-react";
+import { Plus, ArrowLeft, Loader2, BookText, Filter } from "lucide-react";
 import { getAllBooks, createBook, updateBook, deleteBook } from "../books.api";
 import { addBookToLibrary } from "@/features/library/library.api";
 import BookCard from "../components/BookCard";
@@ -30,7 +30,6 @@ const BooksPage = () => {
     try {
       setLoading(true);
       const res = await getAllBooks();
-      // Ensure we are setting an array
       setBooks(res.books || res.data || []);
     } catch (error) {
       console.error("Failed to fetch books:", error);
@@ -44,7 +43,6 @@ const BooksPage = () => {
     if (!window.confirm("Are you sure you want to delete this book?")) return;
     try {
       await deleteBook(bookId);
-      // Optimistically remove from UI
       setBooks((prev) => prev.filter((b) => b.id !== bookId));
       toast.success("Book deleted successfully");
     } catch (error) {
@@ -80,17 +78,11 @@ const BooksPage = () => {
   const handleSubmit = async (data) => {
     try {
       if (editingBook) {
-        // 1. Perform the update
         await updateBook(editingBook.id, data);
-        
-        // 2. Refetch ALL books from server to ensure UI matches DB
-        // This fixes the "not reflecting" issue
         await fetchBooks();
-        
         toast.success("Book updated successfully");
       } else {
         const res = await createBook(data);
-        // Add new book to state
         setBooks((prevBooks) => [...prevBooks, res.book]);
         toast.success("Book created successfully");
       }
@@ -113,43 +105,47 @@ const BooksPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 md:p-10 transition-colors">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#020617] p-6 md:p-12 transition-colors duration-500">
+      <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div className="space-y-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
+              className="group flex items-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest transition-all hover:gap-3"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={16} />
+              Back
             </button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Books Management
+              <h1 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
+                The <span className="text-indigo-600">Catalogue</span>
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Manage your library collection
+              <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium text-lg">
+                Curate and manage your digital library collection.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-700"
-          >
-            <Plus size={18} />
-            Add Book
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleAdd}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-200 dark:shadow-none transition-all hover:bg-indigo-700 hover:scale-105 active:scale-95"
+            >
+              <Plus size={18} strokeWidth={3} />
+              New Entry
+            </button>
+          </div>
         </div>
 
         {/* Content Grid */}
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
+            <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Fetching Books...</p>
           </div>
         ) : (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {books.length > 0 ? (
               books.map((book) => (
                 <BookCard
@@ -161,8 +157,10 @@ const BooksPage = () => {
                 />
               ))
             ) : (
-              <div className="col-span-full text-center py-12 border border-dashed border-gray-300 rounded-xl">
-                <p className="text-gray-500">No books found. Add one to get started!</p>
+              <div className="col-span-full flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                <BookText className="h-16 w-16 text-slate-300 mb-4" />
+                <p className="text-slate-500 font-bold text-lg">Your library is currently empty</p>
+                <button onClick={handleAdd} className="mt-4 text-indigo-600 font-bold hover:underline">Add your first book</button>
               </div>
             )}
           </div>

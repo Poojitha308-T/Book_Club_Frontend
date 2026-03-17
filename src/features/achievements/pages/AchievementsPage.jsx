@@ -4,6 +4,7 @@ import {
   getUserAchievements,
   assignAchievementToUser,
   getAllAchievements,
+  removeUserAchievement, // ✅ added
 } from "../achievements.api";
 import { getAllUsers } from "@/features/users/users.api";
 import { toast } from "react-toastify";
@@ -23,7 +24,7 @@ const AchievementsPage = () => {
     try {
       setLoading(true);
 
-      const role = localStorage.getItem("role"); // "admin" or "user"
+      const role = localStorage.getItem("role");
       const userId = parseInt(localStorage.getItem("userId"), 10);
       const isAdminUser = role === "admin";
       setIsAdmin(isAdminUser);
@@ -32,49 +33,39 @@ const AchievementsPage = () => {
       console.log("UserId:", userId);
       console.log("IsAdmin:", isAdminUser);
 
-      // Get current user's achievements (for display)
       const earnedRes = await getUserAchievements();
-      setEarnedAchievements(earnedRes.data || []);
+      setEarnedAchievements(earnedRes || []);
 
-      // Get all achievements
       const allRes = await getAllAchievements();
-      setAllAchievements(allRes.data || []);
+      setAllAchievements(allRes || []);
 
-      // Get all users - FIX: Handle different response structures
       const usersRes = await getAllUsers();
       console.log("Full users response:", usersRes);
-      console.log("Users response keys:", Object.keys(usersRes));
-      
-      // Handle different API response structures
+
       let users = [];
       if (Array.isArray(usersRes)) {
         users = usersRes;
       } else if (usersRes.data) {
-        users = Array.isArray(usersRes.data) ? usersRes.data : [usersRes.data];
+        users = Array.isArray(usersRes.data)
+          ? usersRes.data
+          : [usersRes.data];
       } else if (usersRes.users) {
-        users = Array.isArray(usersRes.users) ? usersRes.users : [usersRes.users];
+        users = Array.isArray(usersRes.users)
+          ? usersRes.users
+          : [usersRes.users];
       }
-      
-      console.log("Processed users array:", users);
-      console.log("First user structure (if any):", users[0] ? JSON.stringify(users[0]) : "no users");
 
       if (isAdminUser) {
         setAllUsers(users);
       } else {
-        // For non-admin, find current user
-        console.log("Looking for user with id:", userId, "type:", typeof userId);
-        
         const currentUser = users.find((u) => {
-          console.log("Comparing user id:", u.id, "type:", typeof u.id, "with:", userId);
           return String(u.id) === String(userId) || u.id === userId;
         });
-        
-        console.log("Current user found:", currentUser);
-        setAllUsers(currentUser ? [currentUser] : users); // Fallback to all users if not found
+
+        setAllUsers(currentUser ? [currentUser] : users);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
-      console.error("Error response:", err.response?.data);
       toast.error("Failed to load achievements");
     } finally {
       setLoading(false);
@@ -94,8 +85,8 @@ const AchievementsPage = () => {
 
     const fetchUserAchievements = async () => {
       try {
-        const res = await getUserAchievements(selectedUserId);
-        setSelectedUserEarned(res.data || []);
+        const res = await getUserAchievements(); // backend only supports /me
+        setSelectedUserEarned(res || []);
       } catch (err) {
         console.error(err);
       }
@@ -105,29 +96,55 @@ const AchievementsPage = () => {
   }, [selectedUserId]);
 
   const handleAssignAchievement = async () => {
-  if (!selectedAchievement) return toast.error("Select an achievement");
-  if (!selectedUserId) return toast.error("Select a user");
+    console.log("Selected User:", selectedUserId);
+    console.log("Selected Achievement:", selectedAchievement);
 
-  try {
-    // Convert IDs to numbers
-    const userIdNum = parseInt(selectedUserId, 10);
-    const achievementIdNum = parseInt(selectedAchievement, 10);
+    if (!selectedAchievement || selectedAchievement === "0") {
+      return toast.error("Select an achievement");
+    }
 
-    await assignAchievementToUser(userIdNum, achievementIdNum);
-    toast.success("Achievement assigned successfully!");
+    if (!selectedUserId || selectedUserId === "0") {
+      return toast.error("Select a user");
+    }
 
-    // Refetch achievements for the selected user
-    const updatedAchievements = await getUserAchievements(userIdNum);
-    setEarnedAchievements(updatedAchievements || []);
+    try {
+      await assignAchievementToUser(selectedUserId, selectedAchievement);
 
-    setSelectedAchievement("");
-    setSelectedUserId("");
-    setSelectedUserEarned([]);
-  } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.message || "Failed to assign achievement");
-  }
-};
+      toast.success("Achievement assigned successfully!");
+
+      const updatedAchievements = await getUserAchievements();
+      setEarnedAchievements(updatedAchievements || []);
+
+      setSelectedAchievement("");
+      setSelectedUserId("");
+      setSelectedUserEarned([]);
+    } catch (err) {
+      console.error("FULL ERROR:", err.response?.data || err);
+      toast.error(
+        err.response?.data?.message || "Failed to assign achievement"
+      );
+    }
+  };
+
+  // ✅ DELETE FUNCTION
+  const handleRemove = async (achievementId) => {
+    if (!selectedUserId) {
+      return toast.error("Select a user first");
+    }
+
+    try {
+      await removeUserAchievement(selectedUserId, achievementId);
+
+      toast.success("Achievement removed");
+
+      const updated = await getUserAchievements();
+      setEarnedAchievements(updated || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to remove");
+    }
+  };
+
   if (loading)
     return (
       <div className="p-10 text-center text-gray-500">
@@ -138,21 +155,22 @@ const AchievementsPage = () => {
   const earnedIds = selectedUserEarned.map((ach) => ach.id);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <h2 className="text-2xl font-bold">Achievements</h2>
+    <div className="max-w-6xl mx-auto p-6 space-y-6 text-slate-800 dark:text-slate-200">
+      <h2 className="text-3xl font-bold tracking-tight">Achievements</h2>
 
-      {/* Debug info - remove after testing */}
-      <div className="bg-yellow-100 p-2 text-sm">
-        Debug: Role: {localStorage.getItem("role")} | Users loaded: {allUsers.length}
-      </div>
-
-      {/* Assign Achievement Section */}
-      <section className="bg-white p-4 rounded-2xl shadow-md space-y-4">
+      <section
+        className="bg-white dark:bg-slate-900 
+        border border-slate-200 dark:border-slate-800 
+        p-6 rounded-2xl shadow-sm space-y-4 transition-all"
+      >
         <h3 className="text-lg font-semibold">Assign Achievement</h3>
-        <div className="flex flex-col sm:flex-row gap-4 items-start">
-          {/* Achievement dropdown */}
+
+        <div className="flex flex-col sm:flex-row gap-4">
           <select
-            className="border p-2 rounded flex-1"
+            className="flex-1 px-3 py-2 rounded-lg border 
+            bg-white dark:bg-slate-800 
+            border-slate-300 dark:border-slate-700 
+            focus:ring-2 focus:ring-indigo-500 outline-none"
             value={selectedAchievement}
             onChange={(e) => setSelectedAchievement(e.target.value)}
           >
@@ -163,14 +181,17 @@ const AchievementsPage = () => {
                 value={ach.id}
                 disabled={earnedIds.includes(ach.id)}
               >
-                {ach.name} {earnedIds.includes(ach.id) ? "(Already earned)" : ""}
+                {ach.name}{" "}
+                {earnedIds.includes(ach.id) ? "(Already earned)" : ""}
               </option>
             ))}
           </select>
 
-          {/* User dropdown */}
           <select
-            className="border p-2 rounded flex-1"
+            className="flex-1 px-3 py-2 rounded-lg border 
+            bg-white dark:bg-slate-800 
+            border-slate-300 dark:border-slate-700 
+            focus:ring-2 focus:ring-indigo-500 outline-none"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
           >
@@ -184,30 +205,51 @@ const AchievementsPage = () => {
 
           <button
             onClick={handleAssignAchievement}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            className="px-5 py-2.5 rounded-lg 
+            bg-indigo-600 text-white font-medium
+            hover:bg-indigo-700 active:scale-95 
+            transition-all shadow-sm"
           >
-            Assign Achievement
+            Assign
           </button>
         </div>
       </section>
 
-      {/* Earned Achievements */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
         {earnedAchievements.length === 0 ? (
-          <p className="text-gray-500">No achievements earned yet</p>
+          <p className="text-slate-500 dark:text-slate-400">
+            No achievements earned yet
+          </p>
         ) : (
           earnedAchievements.map((ach) => (
             <div
               key={ach.id}
-              className="bg-white p-4 rounded-2xl shadow-md text-center"
+              className="bg-white dark:bg-slate-900 
+              border border-slate-200 dark:border-slate-800 
+              p-5 rounded-2xl shadow-sm 
+              hover:shadow-md hover:-translate-y-1 
+              transition-all duration-300 text-center"
             >
-              <h3 className="font-semibold">{ach.name}</h3>
-              <p className="text-gray-500 text-sm">{ach.description}</p>
+              <h3 className="font-semibold text-lg">{ach.name}</h3>
+
+              <p className="text-sm mt-1 text-slate-500 dark:text-slate-400">
+                {ach.description}
+              </p>
+
               {ach.earned_at && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Earned on: {new Date(ach.earned_at).toLocaleDateString()}
+                <p className="text-xs mt-3 text-slate-400 dark:text-slate-500">
+                  Earned on{" "}
+                  {new Date(ach.earned_at).toLocaleDateString()}
                 </p>
               )}
+
+              {/* ✅ REMOVE BUTTON */}
+              <button
+                onClick={() => handleRemove(ach.id)}
+                className="mt-3 text-red-500 text-sm hover:underline"
+              >
+                Remove
+              </button>
             </div>
           ))
         )}

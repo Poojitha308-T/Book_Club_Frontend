@@ -1,51 +1,43 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats } from "../dashboard.api";
-import {
-  getUserLibrary,
-  addBookToLibrary,
-} from "@/features/library/library.api";
+import { getUserLibrary, addBookToLibrary } from "@/features/library/library.api";
 import { getAllBooks } from "@/features/books/books.api";
 import { getBookReviews, addBookReview } from "@/features/reviews/reviews.api";
 import { getUserGoals } from "@/features/goals/goals.api";
 import { getUserAchievements } from "@/features/achievements/achievements.api";
-import AchievementCard from "@/features/achievements/components/AchievementCard";
 import { toast } from "react-toastify";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, Trophy, Target, Star, MessageSquare, Users, Bell, Calendar, PlusCircle } from "lucide-react";
 
 // ⭐ Star rating component
 const StarRating = ({ rating = 0, max = 5 }) => {
   const fullStars = Math.floor(rating);
-  const halfStar = rating % 1 >= 0.5;
-  const emptyStars = max - fullStars - (halfStar ? 1 : 0);
-
   return (
-    <div className="flex items-center">
-      {Array(fullStars)
-        .fill(0)
-        .map((_, idx) => (
-          <span key={`full-${idx}`} className="text-yellow-400 text-lg">
-            ★
-          </span>
-        ))}
-      {halfStar && <span className="text-yellow-400 text-lg">⯨</span>}
-      {Array(emptyStars)
-        .fill(0)
-        .map((_, idx) => (
-          <span key={`empty-${idx}`} className="text-gray-300 text-lg">
-            ★
-          </span>
-        ))}
+    <div className="flex items-center gap-0.5">
+      {[...Array(max)].map((_, idx) => (
+        <Star
+          key={idx}
+          size={16}
+          className={`${idx < fullStars ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-600"}`}
+        />
+      ))}
     </div>
   );
 };
 
 // ⭐ ProgressBar component
-const ProgressBar = ({ percentage }) => (
-  <div className="w-full bg-gray-200 rounded-full h-3">
-    <div
-      className="bg-indigo-600 h-3 rounded-full transition-all"
-      style={{ width: `${percentage}%` }}
-    />
+const ProgressBar = ({ percentage, label }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
+      <span>{label}</span>
+      <span>{Math.round(percentage)}%</span>
+    </div>
+    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+      <div
+        className="bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out"
+        style={{ width: `${percentage}%` }}
+      />
+    </div>
   </div>
 );
 
@@ -70,7 +62,6 @@ const DashboardPage = () => {
         const booksRes = await getAllBooks();
         const goalsRes = await getUserGoals();
         const achievementsRes = await getUserAchievements();
-        setAchievements(achievementsRes.data || []);
 
         setStats({
           totalUsers: statsRes?.data?.totalUsers ?? 0,
@@ -84,7 +75,7 @@ const DashboardPage = () => {
 
         setBooks(booksRes?.books ?? []);
         setGoals(goalsRes?.goals ?? []);
-        setAchievements(achievementsRes?.achievements ?? []);
+        setAchievements(achievementsRes?.achievements ?? achievementsRes?.data ?? []);
 
         await fetchLibraryWithTitlesAndRatings(booksRes?.books ?? []);
       } catch (err) {
@@ -111,12 +102,11 @@ const DashboardPage = () => {
             const revRes = await getBookReviews(b.book_id);
             const bookReviews = revRes.reviews ?? [];
             avgRating = bookReviews.length
-              ? bookReviews.reduce((sum, r) => sum + r.rating, 0) /
-                bookReviews.length
+              ? bookReviews.reduce((sum, r) => sum + r.rating, 0) / bookReviews.length
               : null;
           } catch {}
           return { ...b, title: bookInfo?.title || "Unknown", avgRating };
-        }),
+        })
       );
 
       setLibrary(libWithTitles);
@@ -147,268 +137,310 @@ const DashboardPage = () => {
     }
   };
 
-  // --- fetch reviews for a selected book ---
   const fetchReviewsForBook = async (bookId) => {
     if (!bookId) return setReviews([]);
-
     try {
       const reviewsData = await getBookReviews(bookId);
-      // getBookReviews should return an array directly
       setReviews(reviewsData ?? []);
     } catch (err) {
-      console.error("Fetch reviews failed:", err.response?.data || err.message);
       setReviews([]);
-      toast.error("Failed to fetch reviews for this book");
+      toast.error("Failed to fetch reviews");
     }
   };
 
-  // --- handle adding a review ---
   const handleAddReview = async () => {
-    if (!selectedBook) {
-      toast.error("Please select a book first");
+    if (!selectedBook || !reviewText.trim()) {
+      toast.error("Please fill in all review fields");
       return;
     }
-    if (!reviewText.trim()) {
-      toast.error("Write a review before submitting");
-      return;
-    }
-
     try {
-      // Send review to backend
       await addBookReview(selectedBook, reviewRating, reviewText);
-
       toast.success("Review added successfully!");
-
-      // ✅ Reset the review input and rating
-      setReviewText(""); // clear textarea
-      setReviewRating(5); // reset rating to default 5 stars
-
-      // Refresh the reviews list
+      setReviewText("");
+      setReviewRating(5);
       fetchReviewsForBook(selectedBook);
-
-      // Optional: update library avgRating immediately
+      
       const updatedLibrary = library.map((b) =>
         b.book_id === selectedBook
           ? {
               ...b,
               avgRating: reviews.length
-                ? (reviews.reduce((sum, r) => sum + r.rating, 0) +
-                    reviewRating) /
-                  (reviews.length + 1)
+                ? (reviews.reduce((sum, r) => sum + r.rating, 0) + reviewRating) / (reviews.length + 1)
                 : reviewRating,
             }
-          : b,
+          : b
       );
       setLibrary(updatedLibrary);
     } catch (err) {
-      console.error("Add review failed:", err.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Failed to add review");
+      toast.error("Failed to add review");
     }
   };
+
   if (loading)
     return (
-      <div className="p-10 text-center text-slate-500">
-        Loading dashboard...
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <p className="font-medium text-slate-500">Curating your experience...</p>
+        </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:from-gray-900 dark:via-slate-900 dark:to-black transition-colors">
-      <main className="px-4 sm:px-6 lg:px-10 py-10 space-y-14 max-w-7xl mx-auto">
-        {/* PLATFORM OVERVIEW */}
-        <section>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 tracking-tight">
-            Platform Overview
-          </h2>
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] pb-20">
+      {/* HEADER */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-8 mb-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Reader Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400">Welcome back! Here's what's happening in your library today.</p>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            <StatCard title="Total Users" value={stats.totalUsers} />
-            <StatCard title="Total Books" value={stats.totalBooks} />
-            <StatCard title="Total Reviews" value={stats.totalReviews} />
-            <StatCard
-              title="Total Discussions"
-              value={stats.totalDiscussions}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
-            <StatCard title="Notifications" value={stats.totalNotifications} />
-            <StatCard
-              title="Upcoming Meetings"
-              value={stats.upcomingMeetings?.length ?? 0}
-            />
-          </div>
-        </section>
-
-        {/* ADD BOOK */}
-        <section>
-          <h2 className="text-xl font-semibold text-slate-700 mb-6">
-            Add Book To Library
-          </h2>
-          <Card className="border border-slate-200 shadow-sm">
-            <CardContent className="p-6 space-y-4">
-              <select
-                className="w-full border p-2 rounded"
-                value={selectedBook}
-                onChange={(e) => setSelectedBook(e.target.value)}
-              >
-                <option value="">Select Book</option>
-                {books.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.title}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="w-full border p-2 rounded"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <option value="to_read">To Read</option>
-                <option value="reading">Reading</option>
-                <option value="completed">Completed</option>
-              </select>
-              <button
-                onClick={handleAddToLibrary}
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-              >
-                Add To Library
-              </button>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* LIBRARY OVERVIEW */}
-        <section>
-          <h2 className="text-xl font-semibold text-slate-700 mb-6">
-            My Library Overview
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            <StatCard title="Total Books" value={libraryStats.total} />
-            <StatCard title="Reading" value={libraryStats.reading} />
-            <StatCard title="Completed" value={libraryStats.completed} />
-            <StatCard title="To Read" value={libraryStats.to_read} />
-          </div>
-          <div className="mt-4">
-            <ProgressBar
-              percentage={
-                libraryStats.total
-                  ? (libraryStats.completed / libraryStats.total) * 100
-                  : 0
-              }
-            />
-          </div>
-        </section>
-
+      <main className="max-w-7xl mx-auto px-6 space-y-10">
         
-        {/* GOALS & ACHIEVEMENTS */}
-        <section>
-          <h2 className="text-xl font-semibold text-slate-700 mb-6">
-            Goals & Achievements
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            {goals.map((g) => {
-              const bookProgress = g.target_books
-                ? g.completed_books / g.target_books
-                : 0;
-              const pageProgress = g.target_pages
-                ? g.completed_pages / g.target_pages
-                : 0;
-              const overallProgress = Math.round(
-                ((bookProgress + pageProgress) / 2) * 100,
-              );
-
-              return (
-                <StatCard
-                  key={g.id}
-                  title={g.title}
-                  value={`${overallProgress}%`}
-                />
-              );
-            })}
-            {achievements.map((a) => (
-              <StatCard
-                key={a.id}
-                title={a.title}
-                value={a.completed ? "✅" : "❌"}
-              />
-            ))}
-          </div>
+        {/* TOP STATS */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Community" value={stats.totalUsers} icon={<Users className="text-blue-500" />} subtitle="Active Users" />
+          <StatCard title="Catalogue" value={stats.totalBooks} icon={<BookOpen className="text-indigo-500" />} subtitle="Books Available" />
+          <StatCard title="Engagement" value={stats.totalReviews} icon={<MessageSquare className="text-purple-500" />} subtitle="Total Reviews" />
+          <StatCard title="Meetings" value={stats.upcomingMeetings?.length ?? 0} icon={<Calendar className="text-orange-500" />} subtitle="Upcoming events" />
         </section>
 
-        {/* REVIEWS */}
-        <section>
-          <h2 className="text-xl font-semibold text-slate-700 mb-6">
-            Book Reviews
-          </h2>
-          <Card className="border border-slate-200 shadow-sm p-6 space-y-4">
-            <select
-              className="w-full border p-2 rounded"
-              value={selectedBook}
-              onChange={(e) => {
-                setSelectedBook(e.target.value);
-                fetchReviewsForBook(e.target.value);
-              }}
-            >
-              <option value="">Select Book</option>
-              {library.map((b) => (
-                <option key={b.book_id} value={b.book_id}>
-                  {b.title}{" "}
-                  {b.avgRating != null ? ` - ${b.avgRating.toFixed(1)} ⭐` : ""}
-                </option>
-              ))}
-            </select>
-            <div className="space-y-2">
-              <label className="block font-medium">Rating:</label>
-              <select
-                className="border p-1 rounded"
-                value={reviewRating}
-                onChange={(e) => setReviewRating(Number(e.target.value))}
-              >
-                {[1, 2, 3, 4, 5].map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                className="w-full border p-2 rounded"
-                placeholder="Write your review..."
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-              />
-              <button
-                onClick={handleAddReview}
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-              >
-                Submit Review
-              </button>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Reviews</h3>
-              {reviews.length === 0 ? (
-                <p className="text-slate-400">No reviews yet</p>
-              ) : (
-                reviews.map((r) => (
-                  <div key={r.id} className="border p-2 rounded">
-                    <StarRating rating={r.rating} />
-                    <p>{r.comment}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* LEFT COLUMN: Library & Actions */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* MY LIBRARY STATUS */}
+            <Card className="overflow-hidden border-none shadow-md bg-white dark:bg-slate-900">
+              <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen size={20} className="text-indigo-600" /> My Library Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                  <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                    <p className="text-2xl font-bold text-indigo-600">{libraryStats.total}</p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total</p>
                   </div>
-                ))
-              )}
-            </div>
-          </Card>
-        </section>
+                  <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20">
+                    <p className="text-2xl font-bold text-blue-600">{libraryStats.reading}</p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Reading</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                    <p className="text-2xl font-bold text-emerald-600">{libraryStats.completed}</p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Finished</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+                    <p className="text-2xl font-bold text-amber-600">{libraryStats.to_read}</p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Queue</p>
+                  </div>
+                </div>
+                <ProgressBar 
+                  percentage={libraryStats.total ? (libraryStats.completed / libraryStats.total) * 100 : 0} 
+                  label="Overall Library Completion" 
+                />
+              </CardContent>
+            </Card>
+
+            {/* REVIEWS SECTION */}
+            <Card className="border-none shadow-md bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Star size={20} className="text-yellow-500" /> Write a Review
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Select Book</label>
+                    <select
+                      className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm outline-indigo-500"
+                      value={selectedBook}
+                      onChange={(e) => {
+                        setSelectedBook(e.target.value);
+                        fetchReviewsForBook(e.target.value);
+                      }}
+                    >
+                      <option value="">Choose a book from library...</option>
+                      {library.map((b) => (
+                        <option key={b.book_id} value={b.book_id}>
+                          {b.title} {b.avgRating ? `(${b.avgRating.toFixed(1)} ⭐)` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Rating</label>
+                    <div className="flex items-center gap-3">
+                      <select
+                        className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm outline-indigo-500"
+                        value={reviewRating}
+                        onChange={(e) => setReviewRating(Number(e.target.value))}
+                      >
+                        {[5, 4, 3, 2, 1].map((num) => (
+                          <option key={num} value={num}>{num} Stars</option>
+                        ))}
+                      </select>
+                      <StarRating rating={reviewRating} />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Your Thoughts</label>
+                  <textarea
+                    className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm min-h-[100px] outline-indigo-500 transition-all focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="What did you think of the characters, the plot, or the writing style?"
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                  />
+                </div>
+                <button
+                  onClick={handleAddReview}
+                  className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                >
+                  Post Review
+                </button>
+
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <h3 className="font-semibold mb-4 text-slate-800 dark:text-slate-200">Recent Reviews for this Book</h3>
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {reviews.length === 0 ? (
+                      <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/30 rounded-xl italic text-slate-400">
+                        No reviews yet. Be the first to share your thoughts!
+                      </div>
+                    ) : (
+                      reviews.map((r) => (
+                        <div key={r.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl space-y-2">
+                          <StarRating rating={r.rating} />
+                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{r.comment}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT COLUMN: Quick Add & Progress */}
+          <div className="space-y-8">
+            
+            {/* QUICK ADD */}
+            <Card className="border-none shadow-md bg-white dark:bg-slate-900 border-t-4 border-t-indigo-600">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <PlusCircle size={20} className="text-indigo-600" /> Quick Add
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <select
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm outline-indigo-500"
+                  value={selectedBook}
+                  onChange={(e) => setSelectedBook(e.target.value)}
+                >
+                  <option value="">Discover books...</option>
+                  {books.map((b) => (
+                    <option key={b.id} value={b.id}>{b.title}</option>
+                  ))}
+                </select>
+                <select
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm outline-indigo-500"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                  <option value="to_read">Wishlist (To Read)</option>
+                  <option value="reading">Currently Reading</option>
+                  <option value="completed">Finished</option>
+                </select>
+                <button
+                  onClick={handleAddToLibrary}
+                  className="w-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-bold py-2.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                >
+                  Add to Library
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* GOALS */}
+            <Card className="border-none shadow-md bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target size={20} className="text-rose-500" /> Active Goals
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {goals.length === 0 ? (
+                  <p className="text-center text-slate-400 py-4 italic">No goals set yet.</p>
+                ) : (
+                  goals.map((g) => {
+                    const bookProgress = g.target_books ? g.completed_books / g.target_books : 0;
+                    const pageProgress = g.target_pages ? g.completed_pages / g.target_pages : 0;
+                    const overallProgress = Math.round(((bookProgress + pageProgress) / 2) * 100);
+                    return (
+                      <ProgressBar key={g.id} label={g.title} percentage={overallProgress} />
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ACHIEVEMENTS */}
+            <Card className="border-none shadow-md bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy size={20} className="text-amber-500" /> Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-3">
+                  {achievements.length === 0 ? (
+                    <p className="text-center text-slate-400 py-4 italic">Begin reading to unlock!</p>
+                  ) : (
+                    achievements.map((a) => (
+                      <div key={a.id} className={`flex items-center justify-between p-3 rounded-xl border ${a.completed ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30" : "bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800 opacity-60"}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${a.completed ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600" : "bg-slate-200 dark:bg-slate-700 text-slate-400"}`}>
+                            <Trophy size={16} />
+                          </div>
+                          <span className="text-sm font-medium">{a.title}</span>
+                        </div>
+                        {a.completed ? <span className="text-emerald-500">✅</span> : <span className="text-slate-300">🔒</span>}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
+      
+      {/* STATS CARD COMPONENT */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+      `}</style>
     </div>
   );
 };
 
-const StatCard = ({ title, value }) => (
-  <Card className="border border-slate-200 shadow-sm hover:shadow-md transition">
-    <CardContent className="p-6">
-      <p className="text-sm text-slate-500 font-medium">{title}</p>
-      <div className="mt-2">{value}</div>
+const StatCard = ({ title, value, icon, subtitle }) => (
+  <Card className="border-none shadow-sm bg-white dark:bg-slate-900 hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
+          <h3 className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">{value}</h3>
+          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+        </div>
+        <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+          {icon}
+        </div>
+      </div>
     </CardContent>
   </Card>
 );
