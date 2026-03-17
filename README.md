@@ -1,263 +1,157 @@
-<<<<<<< HEAD
-Deployment Link - https://fluffy-bubblegum-5fd360.netlify.app/
-📚 Book Club Platform — Frontend
-🌟 Overview
-=======
-Deployment link -https://fluffy-bubblegum-5fd360.netlify.app/
-# React + Vite
->>>>>>> 752119f15d952e76846f6c89da4e417e679a097e
+# 📚 Book Club Management Platform – Frontend
 
-The Book Club Platform is a modern, interactive frontend web application designed to help book lovers collaborate, suggest books, participate in discussions, track reading progress, and engage with a vibrant reading community.
+## Project Title
 
-This platform focuses on dynamic UI, real-time updates, personalized experiences, and smooth user interaction.
+Book Club Management Platform – Frontend
 
-🎯 Project Goals
+---
 
-Provide a dynamic book suggestion and voting system
+# Project Description
 
-Enable structured discussion forums
+The **Book Club Management Platform** is a web application designed to bring readers together in an interactive online environment. It allows users to discover books, manage personal libraries, participate in discussions, and track reading progress.
 
-Track reading progress visually
+The frontend provides a responsive and user-friendly interface that interacts with the backend API to deliver a seamless experience for users. Members can manage their reading activity, join discussions with other readers, and track achievements earned through their participation in the platform.
 
-Allow personal reading goal management
+---
 
-Display ratings, reviews, and achievements
+# ✨ Features
 
-Offer a responsive and engaging user experience
+### 🔐 Authentication
+- User Signup
+- User Login
+- JWT-based authentication
+- Protected routes for authenticated users
 
-🏗️ Tech Stack
+### 📚 Personal Library
+- Add books to personal library
+- Remove books from library
+- View saved books
 
-React.js
+### 🗨 Discussions
+- View discussion threads
+- Create new discussion posts
+- Engage with other members
 
-React Router
+### 🏆 Achievements
+- View unlocked achievements
+- Track reading milestones
 
-Context API (AuthContext)
+### 📊 Dashboard
+- Display reading statistics
+- Activity insights
+- Data visualization charts
 
-Axios
+### 🎨 User Interface
+- Responsive layout
+- Sidebar navigation
+- Interactive charts
+- Toast notifications
+- Clean and modern UI
 
-Tailwind CSS / CSS Modules
+---
 
-Backend: Express + PostgreSQL (separate repository)
+# 🛠 Tech Stack Used
 
-🔐 Authentication
+### Frontend Framework
+- React.js
+- Vite
 
-Authentication is handled using:
+### Styling
+- CSS / Tailwind CSS / Custom styling
 
-JWT stored in localStorage
+### State Management
+- React Hooks
+- Context API
 
-AuthContext for global state management
+### API Communication
+- Axios
 
-Protected routes for authenticated users
+### Data Visualization
+- Recharts / Chart libraries
 
-Role-based UI rendering (Admin / Member)
+---
 
-👥 User Roles
-Role	Permissions
-Member	Suggest books, vote, review, track progress
-Admin	Approve suggestions, manage books
-🚀 Features
-1️⃣ Book Suggestion System
-✅ Suggest a Book
+# 📂 Project Structure
+src
+│
+├── components
+├── pages
+├── api
+├── context
+├── hooks
+├── utils
+└── main.jsx
 
-Users can submit:
 
-Title
+---
 
-Author
+# ⚙ Installation Steps
 
-Description
+### 1. Clone the Repository
 
-✅ Real-Time Voting
+---
 
-Users can upvote suggestions
+### 2. Navigate to the Project Folder
 
-Suggestions sorted by vote count
+---
 
-Duplicate voting prevented
+### 3. Install Dependencies
 
-✅ Admin Approval
+---
 
-Admin can approve suggestions
+### 4. Setup Environment Variables
 
-Approved suggestion becomes an official book
+Create a `.env` file in the root directory.
 
-2️⃣ Books Module
+---
 
-View all approved books
+### 5. Run the Development Server
 
-Book details page
+Application will run on:
 
-Ratings and reviews
+---
 
-Voting system
+# 🌐 Deployment Link
 
-Pagination
+Frontend Live URL
+https://9a328140.book-club-frontend.pages.dev/
 
-3️⃣ Discussion Forums
 
-Book-specific threads
+---
 
-Nested comments (threaded replies)
+# 🔗 Backend API Link
 
-Rich discussion UI
+Backend API Base URL
+https://book-club-backend-5.onrender.com
 
-Pagination support
+---
 
-4️⃣ Reading Progress Tracker
+# 🎥 Video Walkthrough
 
-Update reading percentage
+Project Demo Video
+https://drive.google.com/file/d/1262kjrUG_4At4kiAFB4cRu1crdUD6PB7/view?usp=sharing
 
-Progress bars
 
-Visual tracking per book
+The walkthrough demonstrates:
 
-5️⃣ Personal Reading Goals
+- User authentication
+- Library management
+- Discussions module
+- Achievements system
+- Dashboard analytics
 
-Set target books/pages
+---
 
-Date range selection
+# 🚀 Future Improvements
 
-Progress tracking widgets
+- Real-time notifications
+- Dark mode
+- Advanced search and filtering
+- Book recommendation system
+- Performance optimization
 
-6️⃣ Reviews & Ratings
+---
 
-1–5 star rating system
+# 👩‍💻 Author
 
-One review per user per book
-
-Sort reviews by:
-
-Most recent
-
-Highest rated
-
-Like system for reviews
-
-7️⃣ Personal Library
-
-Users can organize books into:
-
-📖 Currently Reading
-
-✅ Completed
-
-📚 To Read
-
-Supports:
-
-Drag and drop (if implemented)
-
-Custom shelves (optional enhancement)
-
-8️⃣ Meetings System
-
-Schedule virtual meetings
-
-RSVP system
-
-Meeting link integration
-
-9️⃣ Notifications System
-
-Real-time activity updates
-
-Notification dropdown
-
-Read/unread state
-
-🔟 Gamification
-
-Achievement badges
-
-Participation rewards
-
-Reading milestones
-
-📂 Folder Structure
-src/
- ├── features/
- │   ├── books/
- │   ├── suggestions/
- │   ├── discussions/
- │   ├── reviews/
- │   ├── progress/
- │   ├── goals/
- │   ├── library/
- │   ├── meetings/
- │   ├── notifications/
- │
- ├── context/
- │   └── AuthContext.jsx
- │
- ├── services/
- │   └── api.js
- │
- ├── routes/
- │   └── ProtectedRoute.jsx
- │
- └── App.jsx
-🧠 Architecture Highlights
-
-Feature-based folder structure
-
-Separation of concerns
-
-Reusable UI components
-
-API layer abstraction
-
-Context-based authentication
-
-Role-based rendering logic
-
-🖥️ Setup Instructions
-1️⃣ Clone the repository
-git clone <your-frontend-repo-url>
-cd frontend
-2️⃣ Install dependencies
-npm install
-3️⃣ Create .env file
-VITE_API_URL=http://localhost:5000/api
-4️⃣ Start development server
-npm run dev
-📱 Responsive Design
-
-The platform is fully responsive and optimized for:
-
-Desktop
-
-Tablet
-
-Mobile
-
-🔮 Future Enhancements
-
-Dark Mode
-
-Social Media Sharing
-
-Real-time WebSocket updates
-
-Advanced recommendation engine
-
-Analytics dashboard improvements
-
-🎓 Academic Value
-
-This project demonstrates:
-
-Role-based access control
-
-Community-driven voting system
-
-Real-time UI updates
-
-Complex relational database interaction
-
-State management best practices
-
-Modular frontend architecture
-
-👩‍💻 Author
-
-Poojitha Thadiboyina
+Developed as part of a full-stack project to build an interactive **Book Club community platform** where users can collaborate, share reading experiences, and discover new books.
